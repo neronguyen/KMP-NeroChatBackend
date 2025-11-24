@@ -1,7 +1,6 @@
 [versions]
 kotlin = "2.2.21"
 spring-boot = "4.0.0-RC2"
-spring-dependency-management = "1.1.7"
 jackson = "2.17.0"
 jakarta = "6.1.0"
 jwt = "0.12.6"
@@ -65,4 +64,3 @@ kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
 kotlin-jpa = { id = "org.jetbrains.kotlin.plugin.jpa", version.ref = "kotlin" }
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
-spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "spring-dependency-management" }
