@@ -3,8 +3,8 @@ spring:
     name: nerochat
 
   datasource:
-    url: jdbc:postgresql://db.iwetcjhrvdspgofbehyh.supabase.co:5432/postgres
-    username: postgres
+    url: jdbc:postgresql://aws-1-ap-northeast-2.pooler.supabase.com:5432/postgres
+    username: postgres.iwetcjhrvdspgofbehyh
     password: ${POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
