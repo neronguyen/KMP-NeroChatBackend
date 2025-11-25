@@ -3,5 +3,6 @@ plugins {
 }
 
 dependencies {
+    implementation(libs.spring.boot.starter.security)
     testImplementation(kotlin("test"))
 }
