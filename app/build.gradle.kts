@@ -8,9 +8,13 @@ dependencies {
     implementation(projects.user)
     implementation(projects.chat)
     implementation(projects.notification)
+
     implementation(platform(libs.spring.boot.dependencies))
     implementation(libs.spring.boot.starter.web)
+    implementation(libs.spring.boot.starter.security)
+
     implementation(libs.kotlin.reflect)
+    runtimeOnly(libs.postgresql)
 }
 
 kotlin {
