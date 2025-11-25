@@ -1,5 +1,6 @@
 package io.github.neronguyenvn.nerochat.user.infra.database.model
 
+import io.github.neronguyenvn.nerochat.user.domain.model.User
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
@@ -41,3 +42,12 @@ data class UserEntity(
     @UpdateTimestamp
     val updatedAt: Instant = Instant.now(),
 )
+
+fun UserEntity.asExternalModel(): User {
+    return User(
+        id = id!!,
+        username = username,
+        email = email,
+        isEmailVerified = isEmailVerified
+    )
+}
