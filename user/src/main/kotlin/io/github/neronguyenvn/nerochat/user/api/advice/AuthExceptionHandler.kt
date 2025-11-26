@@ -1,5 +1,6 @@
 package io.github.neronguyenvn.nerochat.user.api.advice
 
+import io.github.neronguyenvn.nerochat.user.domain.exception.InvalidTokenException
 import io.github.neronguyenvn.nerochat.user.domain.exception.UserAlreadyExistsException
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.MethodArgumentNotValidException
@@ -16,6 +17,15 @@ class AuthExceptionHandler {
         "code" to "USER_EXISTS",
         "message" to e.message
     )
+
+
+    @ExceptionHandler(InvalidTokenException::class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    fun onInvalidToken(e: InvalidTokenException) = mapOf(
+        "code" to "INVALID_TOKEN",
+        "message" to e.message
+    )
+
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
