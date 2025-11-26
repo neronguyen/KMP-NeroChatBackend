@@ -4,5 +4,9 @@ plugins {
 
 dependencies {
     implementation(libs.spring.boot.starter.security)
+
+    implementation(libs.jwt.api)
+    runtimeOnly(libs.jwt.impl)
+
     testImplementation(kotlin("test"))
 }
