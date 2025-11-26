@@ -14,15 +14,10 @@ class AuthService(
     private val passwordEncoder: PasswordEncoder,
 ) {
     fun register(
-        username: String,
         email: String,
         password: String,
     ): User {
-
-        val existing = userRepository.findByEmailOrUsername(
-            email = email,
-            username = username,
-        )
+        val existing = userRepository.findByEmail(email = email)
 
         if (existing != null) {
             throw UserAlreadyExistsException()
@@ -30,7 +25,6 @@ class AuthService(
 
         val saved = userRepository.save(
             UserEntity(
-                username = username,
                 email = email,
                 hashedPassword = passwordEncoder.encode(password)!!,
             )

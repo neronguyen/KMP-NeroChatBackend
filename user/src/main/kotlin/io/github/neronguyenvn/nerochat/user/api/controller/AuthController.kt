@@ -20,7 +20,6 @@ class AuthController(private val userService: AuthService) {
     ): UserDto {
         return userService.register(
             email = body.email,
-            username = body.username,
             password = body.password
         ).asDto()
     }
