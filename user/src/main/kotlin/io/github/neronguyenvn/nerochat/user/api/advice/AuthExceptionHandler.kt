@@ -1,7 +1,9 @@
 package io.github.neronguyenvn.nerochat.user.api.advice
 
 import io.github.neronguyenvn.nerochat.user.domain.exception.InvalidTokenException
+import io.github.neronguyenvn.nerochat.user.domain.exception.PasswordMismatchException
 import io.github.neronguyenvn.nerochat.user.domain.exception.UserAlreadyExistsException
+import io.github.neronguyenvn.nerochat.user.domain.exception.UserNotFoundException
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -18,7 +20,6 @@ class AuthExceptionHandler {
         "message" to e.message
     )
 
-
     @ExceptionHandler(InvalidTokenException::class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     fun onInvalidToken(e: InvalidTokenException) = mapOf(
@@ -26,6 +27,19 @@ class AuthExceptionHandler {
         "message" to e.message
     )
 
+    @ExceptionHandler(UserNotFoundException::class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    fun onUserNotFound(e: UserNotFoundException) = mapOf(
+        "code" to "USER_NOT_FOUND",
+        "message" to e.message
+    )
+
+    @ExceptionHandler(PasswordMismatchException::class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    fun onPasswordMismatch(e: PasswordMismatchException) = mapOf(
+        "code" to "PASSWORD_MISMATCH",
+        "message" to e.message
+    )
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -34,7 +48,7 @@ class AuthExceptionHandler {
             it.defaultMessage ?: "Invalid value"
         }
         return mapOf(
-            "code" to "VALIDATION_ERROR",
+            "code" to "ARGUMENT_NOT_VALID",
             "message" to errors.first(),
             "errors" to errors
         )
