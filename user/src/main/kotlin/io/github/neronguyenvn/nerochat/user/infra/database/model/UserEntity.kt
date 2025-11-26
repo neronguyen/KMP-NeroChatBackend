@@ -27,13 +27,15 @@ data class UserEntity(
     @GeneratedValue(strategy = GenerationType.UUID)
     val id: UUID? = null,
 
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     val email: String,
 
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     val username: String,
 
+    @Column(nullable = false)
     val hashedPassword: String,
+
     val isEmailVerified: Boolean = false,
 
     @CreationTimestamp
