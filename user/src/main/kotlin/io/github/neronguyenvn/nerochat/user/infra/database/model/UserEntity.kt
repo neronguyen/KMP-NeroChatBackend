@@ -19,7 +19,6 @@ import java.util.UUID
     schema = "user_service",
     indexes = [
         Index(name = "idx_users_email", columnList = "email"),
-        Index(name = "idx_users_username", columnList = "username"),
     ]
 )
 data class UserEntity(
@@ -29,9 +28,6 @@ data class UserEntity(
 
     @Column(unique = true, nullable = false)
     val email: String,
-
-    @Column(unique = true, nullable = false)
-    val username: String,
 
     @Column(nullable = false)
     val hashedPassword: String,
@@ -48,7 +44,6 @@ data class UserEntity(
 fun UserEntity.asExternalModel(): User {
     return User(
         id = id!!,
-        username = username,
         email = email,
         isEmailVerified = isEmailVerified
     )
