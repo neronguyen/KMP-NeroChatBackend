@@ -1,7 +1,9 @@
 package io.github.neronguyenvn.nerochat.user.api.controller
 
+import io.github.neronguyenvn.nerochat.user.api.dto.AuthenticatedUserDto
 import io.github.neronguyenvn.nerochat.user.api.dto.UserDto
 import io.github.neronguyenvn.nerochat.user.api.mapper.asDto
+import io.github.neronguyenvn.nerochat.user.api.request.LoginRequest
 import io.github.neronguyenvn.nerochat.user.api.request.RegisterRequest
 import io.github.neronguyenvn.nerochat.user.service.AuthService
 import jakarta.validation.Valid
@@ -19,6 +21,16 @@ class AuthController(private val userService: AuthService) {
         @Valid @RequestBody body: RegisterRequest
     ): UserDto {
         return userService.register(
+            email = body.email,
+            password = body.password
+        ).asDto()
+    }
+
+    @PostMapping("/login")
+    fun login(
+        @Valid @RequestBody body: LoginRequest
+    ): AuthenticatedUserDto {
+        return userService.login(
             email = body.email,
             password = body.password
         ).asDto()
