@@ -1,9 +1,10 @@
 package io.github.neronguyenvn.nerochat.user.api.dto
 
-import java.util.UUID
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class UserDto(
-    val id: UUID,
+    val id: String,
     val email: String,
     val isEmailVerified: Boolean,
 )
