@@ -102,6 +102,12 @@ class AuthService(
         )
     }
 
+    fun logout(refreshToken: String) {
+        val userId = jwtService.getUserIdFromToken(refreshToken)
+        val hashToken = hashToken(refreshToken)
+        refreshTokenRepository.deleteByUserIdAndHashedToken(userId, hashToken)
+    }
+
     private fun saveRefreshToken(userId: UUID, refreshToken: String) {
         val hashedToken = hashToken(refreshToken)
         val expiryMillis = jwtService.refreshTokenValidityMs
