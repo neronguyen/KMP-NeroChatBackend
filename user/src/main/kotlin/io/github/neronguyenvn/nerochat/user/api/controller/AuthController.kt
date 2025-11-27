@@ -4,6 +4,7 @@ import io.github.neronguyenvn.nerochat.user.api.dto.AuthenticatedUserDto
 import io.github.neronguyenvn.nerochat.user.api.dto.UserDto
 import io.github.neronguyenvn.nerochat.user.api.mapper.asDto
 import io.github.neronguyenvn.nerochat.user.api.request.LoginRequest
+import io.github.neronguyenvn.nerochat.user.api.request.RefreshTokenRequest
 import io.github.neronguyenvn.nerochat.user.api.request.RegisterRequest
 import io.github.neronguyenvn.nerochat.user.service.AuthService
 import jakarta.validation.Valid
@@ -33,6 +34,15 @@ class AuthController(private val userService: AuthService) {
         return userService.login(
             email = body.email,
             password = body.password
+        ).asDto()
+    }
+
+    @PostMapping("/refresh-token")
+    fun refreshToken(
+        @Valid @RequestBody body: RefreshTokenRequest
+    ): AuthenticatedUserDto {
+        return userService.refreshToken(
+            refreshToken = body.refreshToken
         ).asDto()
     }
 }
