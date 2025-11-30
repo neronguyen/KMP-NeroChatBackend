@@ -27,15 +27,9 @@ class EmailVerificationService(
         val user = userRepository.findByEmail(email)
             ?: throw UserNotFoundException()
 
-        val existingTokens = emailVerificationTokenRepository.findByUserAndUsedAtIsNull(
-            user = user
-        )
+        emailVerificationTokenRepository.invalidateActiveTokens(user)
 
-        val now = Instant.now()
-        val usedTokens = existingTokens.map { it.copy(usedAt = now) }
-        emailVerificationTokenRepository.saveAll(usedTokens)
-
-        val expiryDate = now.plus(expiryHours, ChronoUnit.HOURS)
+        val expiryDate = Instant.now().plus(expiryHours, ChronoUnit.HOURS)
 
         val token = EmailVerificationTokenEntity(
             expiredAt = expiryDate,
