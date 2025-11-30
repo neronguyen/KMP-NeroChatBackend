@@ -1,29 +1,32 @@
 package io.github.neronguyenvn.nerochat.user.infra.database.model
 
-import io.github.neronguyenvn.nerochat.user.domain.model.EmailVerificationToken
+import io.github.neronguyenvn.nerochat.user.domain.model.AuthToken
+import io.github.neronguyenvn.nerochat.user.domain.model.AuthTokenType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 import org.hibernate.annotations.CreationTimestamp
 import java.time.Instant
-import java.util.UUID
 
 @Entity
 @Table(
-    name = "email_verification_tokens",
+    name = "auth_tokens",
     schema = "user_service",
 )
-data class EmailVerificationTokenEntity(
+data class AuthTokenEntity(
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    val id: UUID? = null,
+    val token: String,
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    val tokenType: AuthTokenType,
 
     @Column(nullable = false)
     val expiredAt: Instant,
@@ -44,7 +47,10 @@ data class EmailVerificationTokenEntity(
         get() = Instant.now().isAfter(expiredAt)
 }
 
-fun EmailVerificationTokenEntity.asExternalModel() = EmailVerificationToken(
-    token = id!!,
-    user = user.asExternalModel(),
-)
+fun AuthTokenEntity.asEmailVerificationToken(): AuthToken.EmailVerificationToken {
+    if (tokenType != AuthTokenType.EmailVerification) error("Invalid token type")
+    return AuthToken.EmailVerificationToken(
+        token = token,
+        user = user.asExternalModel()
+    )
+}
