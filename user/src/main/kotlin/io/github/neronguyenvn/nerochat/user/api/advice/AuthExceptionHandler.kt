@@ -1,5 +1,6 @@
 package io.github.neronguyenvn.nerochat.user.api.advice
 
+import io.github.neronguyenvn.nerochat.user.domain.exception.EmailNotVerifiedException
 import io.github.neronguyenvn.nerochat.user.domain.exception.InvalidTokenException
 import io.github.neronguyenvn.nerochat.user.domain.exception.PasswordMismatchException
 import io.github.neronguyenvn.nerochat.user.domain.exception.UserAlreadyExistsException
@@ -40,6 +41,14 @@ class AuthExceptionHandler {
         "code" to "PASSWORD_MISMATCH",
         "message" to e.message
     )
+
+    @ExceptionHandler(EmailNotVerifiedException::class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    fun onEmailNotVerified(e: EmailNotVerifiedException) = mapOf(
+        "code" to "EMAIL_NOT_VERIFIED",
+        "message" to e.message
+    )
+
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
