@@ -4,13 +4,19 @@ sealed class AuthToken(
     open val token: String,
     open val user: User,
 ) {
+    data class EmailVerification(
+        override val token: String,
 
-    data class EmailVerificationToken(
+        override val user: User,
+    ) : AuthToken(token, user)
+
+    data class PasswordReset(
         override val token: String,
         override val user: User,
     ) : AuthToken(token, user)
 }
 
 enum class AuthTokenType {
-    EmailVerification;
+    EmailVerification,
+    PasswordReset,
 }

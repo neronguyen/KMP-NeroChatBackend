@@ -2,6 +2,7 @@ package io.github.neronguyenvn.nerochat.user.api.advice
 
 import io.github.neronguyenvn.nerochat.user.domain.exception.EmailNotVerifiedException
 import io.github.neronguyenvn.nerochat.user.domain.exception.InvalidTokenException
+import io.github.neronguyenvn.nerochat.user.domain.exception.SamePasswordException
 import io.github.neronguyenvn.nerochat.user.domain.exception.UserAlreadyExistsException
 import io.github.neronguyenvn.nerochat.user.domain.exception.UserNotFoundException
 import io.github.neronguyenvn.nerochat.user.domain.exception.WrongPasswordException
@@ -49,6 +50,12 @@ class AuthExceptionHandler {
         "message" to e.message
     )
 
+    @ExceptionHandler(SamePasswordException::class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    fun onSamePassword(e: SamePasswordException) = mapOf(
+        "code" to "SAME_PASSWORD",
+        "message" to e.message
+    )
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)

@@ -47,9 +47,17 @@ data class AuthTokenEntity(
         get() = Instant.now().isAfter(expiredAt)
 }
 
-fun AuthTokenEntity.asEmailVerificationToken(): AuthToken.EmailVerificationToken {
+fun AuthTokenEntity.asEmailVerificationToken(): AuthToken.EmailVerification {
     if (tokenType != AuthTokenType.EmailVerification) error("Invalid token type")
-    return AuthToken.EmailVerificationToken(
+    return AuthToken.EmailVerification(
+        token = token,
+        user = user.asExternalModel()
+    )
+}
+
+fun AuthTokenEntity.asPasswordResetToken(): AuthToken.PasswordReset {
+    if (tokenType != AuthTokenType.PasswordReset) error("Invalid token type")
+    return AuthToken.PasswordReset(
         token = token,
         user = user.asExternalModel()
     )

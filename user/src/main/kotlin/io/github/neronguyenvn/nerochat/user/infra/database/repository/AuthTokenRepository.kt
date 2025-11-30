@@ -16,6 +16,10 @@ interface AuthTokenRepository : JpaRepository<AuthTokenEntity, String> {
         invalidateActiveTokens(user, AuthTokenType.EmailVerification)
     }
 
+    fun invalidatePasswordResetTokens(user: UserEntity) {
+        invalidateActiveTokens(user, AuthTokenType.PasswordReset)
+    }
+
     fun deleteByExpiredAtBefore(now: Instant)
 
     @Modifying
