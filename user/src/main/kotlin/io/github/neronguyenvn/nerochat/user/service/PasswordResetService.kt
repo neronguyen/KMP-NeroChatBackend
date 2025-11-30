@@ -19,7 +19,6 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.time.temporal.ChronoUnit
-import java.util.UUID
 
 @Service
 class PasswordResetService(
@@ -64,7 +63,7 @@ class PasswordResetService(
 
         val user = existingToken.user
 
-        if (!passwordEncoder.matches(newPassword, user.hashedPassword)) {
+        if (passwordEncoder.matches(newPassword, user.hashedPassword)) {
             throw SamePasswordException()
         }
 
