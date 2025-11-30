@@ -11,7 +11,6 @@ import io.github.neronguyenvn.nerochat.user.infra.database.repository.UserReposi
 import io.github.neronguyenvn.nerochat.user.infra.database.security.SecureTokenGenerator
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
@@ -59,11 +58,5 @@ class EmailVerificationService(
         val usedToken = existing.copy(usedAt = now)
         authTokenRepository.save(usedToken)
         userRepository.save(existing.user.copy(isEmailVerified = true))
-    }
-
-    @Scheduled(cron = "0 0 3 * * *")
-    fun cleanUpExpiredTokens() {
-        val now = Instant.now()
-        authTokenRepository.deleteByExpiredAtBefore(now)
     }
 }
