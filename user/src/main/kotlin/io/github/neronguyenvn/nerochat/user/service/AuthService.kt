@@ -2,9 +2,9 @@ package io.github.neronguyenvn.nerochat.user.service
 
 import io.github.neronguyenvn.nerochat.user.domain.exception.EmailNotVerifiedException
 import io.github.neronguyenvn.nerochat.user.domain.exception.InvalidTokenException
-import io.github.neronguyenvn.nerochat.user.domain.exception.PasswordMismatchException
 import io.github.neronguyenvn.nerochat.user.domain.exception.UserAlreadyExistsException
 import io.github.neronguyenvn.nerochat.user.domain.exception.UserNotFoundException
+import io.github.neronguyenvn.nerochat.user.domain.exception.WrongPasswordException
 import io.github.neronguyenvn.nerochat.user.domain.model.AuthenticatedUser
 import io.github.neronguyenvn.nerochat.user.domain.model.User
 import io.github.neronguyenvn.nerochat.user.infra.database.model.RefreshTokenEntity
@@ -63,7 +63,7 @@ class AuthService(
             existing.hashedPassword
         )
 
-        if (!matches) throw PasswordMismatchException()
+        if (!matches) throw WrongPasswordException()
         if (!existing.isEmailVerified) throw EmailNotVerifiedException()
 
         val userId = existing.id ?: error("User ID cannot be null")

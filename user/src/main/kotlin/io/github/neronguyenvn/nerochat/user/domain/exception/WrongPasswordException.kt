@@ -1,5 +1,5 @@
 package io.github.neronguyenvn.nerochat.user.domain.exception
 
-class PasswordMismatchException : RuntimeException(
+class WrongPasswordException : RuntimeException(
     "Wrong password provided"
 )
