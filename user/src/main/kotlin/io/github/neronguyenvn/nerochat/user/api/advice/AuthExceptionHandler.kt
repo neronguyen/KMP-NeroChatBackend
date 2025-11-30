@@ -2,9 +2,9 @@ package io.github.neronguyenvn.nerochat.user.api.advice
 
 import io.github.neronguyenvn.nerochat.user.domain.exception.EmailNotVerifiedException
 import io.github.neronguyenvn.nerochat.user.domain.exception.InvalidTokenException
-import io.github.neronguyenvn.nerochat.user.domain.exception.PasswordMismatchException
 import io.github.neronguyenvn.nerochat.user.domain.exception.UserAlreadyExistsException
 import io.github.neronguyenvn.nerochat.user.domain.exception.UserNotFoundException
+import io.github.neronguyenvn.nerochat.user.domain.exception.WrongPasswordException
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -35,9 +35,9 @@ class AuthExceptionHandler {
         "message" to e.message
     )
 
-    @ExceptionHandler(PasswordMismatchException::class)
+    @ExceptionHandler(WrongPasswordException::class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    fun onPasswordMismatch(e: PasswordMismatchException) = mapOf(
+    fun onPasswordMismatch(e: WrongPasswordException) = mapOf(
         "code" to "PASSWORD_MISMATCH",
         "message" to e.message
     )
