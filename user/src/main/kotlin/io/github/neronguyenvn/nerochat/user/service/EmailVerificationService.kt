@@ -23,7 +23,7 @@ class EmailVerificationService(
     @param:Value($$"${email.verification.expiry-hours}") private val expiryHours: Long
 ) {
     @Transactional
-    fun createVerificationToken(email: String): AuthToken.EmailVerificationToken {
+    fun createVerificationToken(email: String): AuthToken.EmailVerification {
         val user = userRepository.findByEmail(email)
             ?: throw UserNotFoundException()
 
