@@ -38,3 +38,5 @@ jwt:
 email:
   verification:
     expiry-hours: 24
+  password-reset:
+    expiry-minutes: 15
