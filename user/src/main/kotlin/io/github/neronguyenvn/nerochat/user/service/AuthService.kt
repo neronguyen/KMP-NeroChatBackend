@@ -1,5 +1,6 @@
 package io.github.neronguyenvn.nerochat.user.service
 
+import io.github.neronguyenvn.nerochat.user.domain.exception.EmailNotVerifiedException
 import io.github.neronguyenvn.nerochat.user.domain.exception.InvalidTokenException
 import io.github.neronguyenvn.nerochat.user.domain.exception.PasswordMismatchException
 import io.github.neronguyenvn.nerochat.user.domain.exception.UserAlreadyExistsException
@@ -24,9 +25,11 @@ import kotlin.io.encoding.Base64
 class AuthService(
     private val userRepository: UserRepository,
     private val refreshTokenRepository: RefreshTokenRepository,
+    private val emailVerificationService: EmailVerificationService,
     private val passwordEncoder: PasswordEncoder,
     private val jwtService: JwtService,
 ) {
+    @Transactional
     fun register(
         email: String,
         password: String,
@@ -37,12 +40,14 @@ class AuthService(
             throw UserAlreadyExistsException()
         }
 
-        val saved = userRepository.save(
+        val saved = userRepository.saveAndFlush(
             UserEntity(
                 email = email,
                 hashedPassword = passwordEncoder.encode(password)!!,
             )
         )
+
+        emailVerificationService.createVerificationToken(email)
 
         return saved.asExternalModel()
     }
@@ -59,6 +64,7 @@ class AuthService(
         )
 
         if (!matches) throw PasswordMismatchException()
+        if (!existing.isEmailVerified) throw EmailNotVerifiedException()
 
         val userId = existing.id ?: error("User ID cannot be null")
         val accessToken = jwtService.generateAccessToken(userId)
