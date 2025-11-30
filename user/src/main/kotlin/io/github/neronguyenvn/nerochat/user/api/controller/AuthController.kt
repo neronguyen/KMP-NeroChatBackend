@@ -2,7 +2,7 @@ package io.github.neronguyenvn.nerochat.user.api.controller
 
 import io.github.neronguyenvn.nerochat.user.api.dto.AuthenticatedUserDto
 import io.github.neronguyenvn.nerochat.user.api.dto.UserDto
-import io.github.neronguyenvn.nerochat.user.api.mapper.asDto
+import io.github.neronguyenvn.nerochat.user.api.dto.asDto
 import io.github.neronguyenvn.nerochat.user.api.request.LoginRequest
 import io.github.neronguyenvn.nerochat.user.api.request.RefreshTokenRequest
 import io.github.neronguyenvn.nerochat.user.api.request.RegisterRequest
