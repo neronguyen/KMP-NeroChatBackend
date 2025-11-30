@@ -45,6 +45,6 @@ data class EmailVerificationTokenEntity(
 }
 
 fun EmailVerificationTokenEntity.asExternalModel() = EmailVerificationToken(
-    id = id!!,
+    token = id!!,
     user = user.asExternalModel(),
 )
