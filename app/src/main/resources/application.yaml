@@ -3,34 +3,25 @@ spring:
     name: nerochat
 
   datasource:
-    url: jdbc:postgresql://aws-1-ap-northeast-2.pooler.supabase.com:5432/postgres
+    url: jdbc:postgresql://aws-1-ap-northeast-2.pooler.supabase.com:6543/postgres
     username: postgres.iwetcjhrvdspgofbehyh
     password: ${POSTGRES_PASSWORD}
-    driver-class-name: org.postgresql.Driver
 
     hikari:
       maximum-pool-size: 10
       minimum-idle: 5
       connection-timeout: 20000
       idle-timeout: 300000
-      max-lifetime: 12000000
-      validation-timeout: 5000
+      max-lifetime: 1800000
       pool-name: SpringBootHikariCP
 
       data-source-properties:
-        prepareThreshold: 5
-        preparedStatementCacheQueries: 256
-        preparedStatementCacheSizeMiB: 5
         tcpKeepAlive: true
         socketTimeout: 30
         connectTimeout: 10
 
   jpa:
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
-        show_sql: true
+    open-in-view: false
 
 jwt:
   secret: ${JWT_SECRET_BASE64}
