@@ -1,5 +1,5 @@
 package io.github.neronguyenvn.nerochat.user.domain.exception
 
-class EmailNotVerifiedException : RuntimeException(
-    "Email is not verified"
-)
+class EmailNotVerifiedException(
+    override val message: String = "Email is not verified",
+) : RuntimeException(message)
