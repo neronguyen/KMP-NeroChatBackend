@@ -1,11 +1,6 @@
 package io.github.neronguyenvn.nerochat.user.api.advice
 
-import io.github.neronguyenvn.nerochat.user.domain.exception.EmailNotVerifiedException
-import io.github.neronguyenvn.nerochat.user.domain.exception.InvalidTokenException
-import io.github.neronguyenvn.nerochat.user.domain.exception.SamePasswordException
-import io.github.neronguyenvn.nerochat.user.domain.exception.UserAlreadyExistsException
-import io.github.neronguyenvn.nerochat.user.domain.exception.UserNotFoundException
-import io.github.neronguyenvn.nerochat.user.domain.exception.WrongPasswordException
+import io.github.neronguyenvn.nerochat.user.domain.exception.*
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -15,12 +10,18 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 @RestControllerAdvice
 class AuthExceptionHandler {
 
-    @ExceptionHandler(UserAlreadyExistsException::class)
-    @ResponseStatus(HttpStatus.CONFLICT)
-    fun onUserAlreadyExists(e: UserAlreadyExistsException) = mapOf(
-        "code" to "USER_EXISTS",
-        "message" to e.message
-    )
+    @ExceptionHandler(MethodArgumentNotValidException::class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    fun onMethodArgumentNotValid(e: MethodArgumentNotValidException): Map<String, Any> {
+        val errors = e.bindingResult.allErrors.map {
+            it.defaultMessage ?: "Invalid value"
+        }
+        return mapOf(
+            "code" to "METHOD_ARGUMENT_NOT_VALID",
+            "message" to errors.first(),
+            "errors" to errors
+        )
+    }
 
     @ExceptionHandler(InvalidTokenException::class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
@@ -39,7 +40,7 @@ class AuthExceptionHandler {
     @ExceptionHandler(WrongPasswordException::class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     fun onPasswordMismatch(e: WrongPasswordException) = mapOf(
-        "code" to "PASSWORD_MISMATCH",
+        "code" to "WRONG_PASSWORD",
         "message" to e.message
     )
 
@@ -50,6 +51,13 @@ class AuthExceptionHandler {
         "message" to e.message
     )
 
+    @ExceptionHandler(InvalidCredentialsException::class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    fun onInvalidCredentials(e: InvalidCredentialsException) = mapOf(
+        "code" to "INVALID_CREDENTIALS",
+        "message" to e.message
+    )
+
     @ExceptionHandler(SamePasswordException::class)
     @ResponseStatus(HttpStatus.CONFLICT)
     fun onSamePassword(e: SamePasswordException) = mapOf(
@@ -57,16 +65,10 @@ class AuthExceptionHandler {
         "message" to e.message
     )
 
-    @ExceptionHandler(MethodArgumentNotValidException::class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    fun onMethodArgumentNotValid(e: MethodArgumentNotValidException): Map<String, Any> {
-        val errors = e.bindingResult.allErrors.map {
-            it.defaultMessage ?: "Invalid value"
-        }
-        return mapOf(
-            "code" to "ARGUMENT_NOT_VALID",
-            "message" to errors.first(),
-            "errors" to errors
-        )
-    }
+    @ExceptionHandler(UserAlreadyExistsException::class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    fun onUserAlreadyExists(e: UserAlreadyExistsException) = mapOf(
+        "code" to "USER_ALREADY_EXISTS",
+        "message" to e.message
+    )
 }
