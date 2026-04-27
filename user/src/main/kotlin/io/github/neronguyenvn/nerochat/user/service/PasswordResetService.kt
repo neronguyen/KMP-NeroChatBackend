@@ -54,7 +54,7 @@ class PasswordResetService(
             ?: throw InvalidTokenException("Password reset token is invalid")
 
         if (existingToken.isUsed()) {
-            throw InvalidTokenException("Password reset  token is already used")
+            throw InvalidTokenException("Password reset token is already used")
         }
 
         if (existingToken.isExpired()) {
@@ -72,6 +72,9 @@ class PasswordResetService(
         val newHashedPassword = passwordEncoder.encode(newPassword)!!
         user.hashedPassword = newHashedPassword
         userRepository.save(user)
+
+        existingToken.usedAt = Instant.now()
+        authTokenRepository.save(existingToken)
     }
 
     @Transactional
