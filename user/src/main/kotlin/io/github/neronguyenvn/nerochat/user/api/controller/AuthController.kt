@@ -4,10 +4,12 @@ import io.github.neronguyenvn.nerochat.user.api.dto.AuthenticatedUserDto
 import io.github.neronguyenvn.nerochat.user.api.dto.UserDto
 import io.github.neronguyenvn.nerochat.user.api.dto.asDto
 import io.github.neronguyenvn.nerochat.user.api.request.*
+import io.github.neronguyenvn.nerochat.user.domain.exception.UserNotFoundException
 import io.github.neronguyenvn.nerochat.user.service.AuthService
 import io.github.neronguyenvn.nerochat.user.service.EmailVerificationService
 import io.github.neronguyenvn.nerochat.user.service.PasswordResetService
 import jakarta.validation.Valid
+import org.springframework.http.HttpStatus
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.bind.annotation.*
@@ -66,10 +68,15 @@ class AuthController(
     }
 
     @PostMapping("/forgot-password")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     fun forgotPassword(
         @Valid @RequestBody body: EmailRequest
     ) {
-        passwordResetService.requestPasswordReset(body.email)
+        try {
+            passwordResetService.requestPasswordReset(body.email)
+        } catch (e: UserNotFoundException) {
+            // Intentionally swallowed — never reveal whether the email is registered
+        }
     }
 
     @PostMapping("/reset-password")
