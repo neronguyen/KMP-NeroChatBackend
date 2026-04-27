@@ -27,6 +27,7 @@ class AuthController(
     ): UserDto {
         return userService.register(
             email = body.email,
+            displayName = body.displayName,
             password = body.password
         ).asDto()
     }
