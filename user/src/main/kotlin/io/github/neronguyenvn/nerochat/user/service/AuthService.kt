@@ -28,10 +28,10 @@ class AuthService(
     @Transactional
     fun register(
         email: String,
+        displayName: String,
         password: String,
     ): User {
         val existing = userRepository.findByEmail(email)
-
         if (existing != null) {
             throw UserAlreadyExistsException()
         }
@@ -39,12 +39,12 @@ class AuthService(
         val saved = userRepository.saveAndFlush(
             UserEntity(
                 email = email,
+                displayName = displayName,
                 hashedPassword = passwordEncoder.encode(password)!!,
             )
         )
 
         emailVerificationService.createVerificationToken(email)
-
         return saved.asExternalModel()
     }
 
