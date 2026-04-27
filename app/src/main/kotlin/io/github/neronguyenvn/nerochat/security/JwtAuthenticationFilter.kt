@@ -1,10 +1,12 @@
 package io.github.neronguyenvn.nerochat.security
 
+import io.github.neronguyenvn.nerochat.user.domain.exception.UserNotFoundException
 import io.github.neronguyenvn.nerochat.user.service.JwtService
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 
@@ -19,8 +21,15 @@ class JwtAuthenticationFilter(private val jwtService: JwtService) : OncePerReque
         val token = resolveToken(request)
 
         if (token != null && jwtService.validateAccessToken(token)) {
-            val auth = jwtService.getAuthentication(token)
-            SecurityContextHolder.getContext().authentication = auth
+            try {
+                val auth = jwtService.getAuthentication(token)
+                val principal = auth.principal as? UserDetails
+                if (principal != null && principal.isEnabled) {
+                    SecurityContextHolder.getContext().authentication = auth
+                }
+            } catch (_: UserNotFoundException) {
+                // leave context anonymous; downstream authorization will return 401
+            }
         }
 
         filterChain.doFilter(request, response)
