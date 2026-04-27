@@ -19,13 +19,13 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import java.util.*
 
 @Service
 class PasswordResetService(
     private val authTokenRepository: AuthTokenRepository,
     private val userRepository: UserRepository,
     private val refreshTokenRepository: RefreshTokenRepository,
-    private val jwtService: JwtService,
     private val passwordEncoder: PasswordEncoder,
     @param:Value($$"${email.password-reset.expiry-minutes}") private val expiryMinutes: Long
 ) {
@@ -75,13 +75,11 @@ class PasswordResetService(
 
     @Transactional
     fun changePassword(
-        accessToken: String,
+        userId: UUID,
         oldPassword: String,
         newPassword: String
     ) {
-        val userId = jwtService.getUserIdFromToken(accessToken)
-        val user = userRepository.findByIdOrNull(userId)
-            ?: throw UserNotFoundException()
+        val user = userRepository.findByIdOrNull(userId) ?: throw UserNotFoundException()
 
         if (!passwordEncoder.matches(oldPassword, user.hashedPassword)) {
             throw WrongPasswordException()

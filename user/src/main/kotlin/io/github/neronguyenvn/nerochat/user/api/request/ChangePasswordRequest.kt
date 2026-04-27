@@ -8,12 +8,8 @@ import kotlinx.serialization.Serializable
 data class ChangePasswordRequest(
 
     @field:NotBlank
-    val accessToken: String,
-
-    @field:NotBlank
     val oldPassword: String,
 
     @field:Password
     val newPassword: String
 )
-
