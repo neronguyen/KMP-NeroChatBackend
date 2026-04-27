@@ -45,6 +45,8 @@ class PasswordResetService(
             user = user
         )
 
+        // TODO: Send real email
+
         return authTokenRepository.save(token).asPasswordResetToken()
     }
 
