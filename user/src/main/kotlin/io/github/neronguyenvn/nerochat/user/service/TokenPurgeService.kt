@@ -10,7 +10,7 @@ import java.time.Instant
 class TokenPurgeService(
     private val authTokenRepository: AuthTokenRepository,
 ) {
-    @Scheduled(cron = "0 0 3 * * *") // every day at 3 AM
+    @Scheduled(cron = "0 0 3 * * *", zone = "Asia/Ho_Chi_Minh") // every day at 03:00 ICT (UTC+7)
     @Transactional
     fun purgeExpiredTokens() {
         val now = Instant.now()
