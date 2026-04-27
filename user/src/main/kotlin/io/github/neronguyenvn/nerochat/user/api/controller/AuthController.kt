@@ -3,22 +3,15 @@ package io.github.neronguyenvn.nerochat.user.api.controller
 import io.github.neronguyenvn.nerochat.user.api.dto.AuthenticatedUserDto
 import io.github.neronguyenvn.nerochat.user.api.dto.UserDto
 import io.github.neronguyenvn.nerochat.user.api.dto.asDto
-import io.github.neronguyenvn.nerochat.user.api.request.ChangePasswordRequest
-import io.github.neronguyenvn.nerochat.user.api.request.EmailRequest
-import io.github.neronguyenvn.nerochat.user.api.request.LoginRequest
-import io.github.neronguyenvn.nerochat.user.api.request.RefreshTokenRequest
-import io.github.neronguyenvn.nerochat.user.api.request.RegisterRequest
-import io.github.neronguyenvn.nerochat.user.api.request.ResetPasswordRequest
+import io.github.neronguyenvn.nerochat.user.api.request.*
 import io.github.neronguyenvn.nerochat.user.service.AuthService
 import io.github.neronguyenvn.nerochat.user.service.EmailVerificationService
 import io.github.neronguyenvn.nerochat.user.service.PasswordResetService
 import jakarta.validation.Valid
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.security.core.userdetails.UserDetails
+import org.springframework.web.bind.annotation.*
+import java.util.*
 
 @RestController
 @RequestMapping("/api/auth")
@@ -90,10 +83,12 @@ class AuthController(
 
     @PostMapping("/change-password")
     fun changePassword(
-        @Valid @RequestBody body: ChangePasswordRequest
+        @Valid @RequestBody body: ChangePasswordRequest,
+        @AuthenticationPrincipal userDetails: UserDetails
     ) {
+        val userId = UUID.fromString(userDetails.username)
         passwordResetService.changePassword(
-            accessToken = body.accessToken,
+            userId = userId,
             oldPassword = body.oldPassword,
             newPassword = body.newPassword
         )
