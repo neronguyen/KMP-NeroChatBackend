@@ -5,15 +5,17 @@ import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.Authentication
 import org.springframework.stereotype.Service
-import java.util.Date
-import java.util.UUID
+import java.util.*
 import kotlin.io.encoding.Base64
 
 @Service
 class JwtService(
     @param:Value($$"${jwt.secret}") private val secretBase64: String,
     @param:Value($$"${jwt.expiration-minutes}") private val expirationMinutes: Int,
+    private val userDetailsService: CustomUserDetailsService
 ) {
     val refreshTokenValidityMs = 30 * 24 * 60 * 60 * 1000L
 
@@ -56,6 +58,16 @@ class JwtService(
             message = "The attached JWT token is not valid"
         )
         return UUID.fromString(claims.subject)
+    }
+
+    fun getAuthentication(token: String): Authentication {
+        val userId = getUserIdFromToken(token)
+        val userDetails = userDetailsService.loadUserByUsername(userId.toString())
+        return UsernamePasswordAuthenticationToken(
+            userDetails,
+            null,
+            userDetails.authorities
+        )
     }
 
     private fun generateToken(
