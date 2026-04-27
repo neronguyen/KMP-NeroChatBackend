@@ -46,17 +46,20 @@ class EmailVerificationService(
         val existing = authTokenRepository.findByIdOrNull(token)
             ?: throw InvalidTokenException("Email verification token is invalid")
 
-        if (existing.isUsed) {
+        if (existing.isUsed()) {
             throw InvalidTokenException("Email verification token is already used")
         }
 
-        if (existing.isExpired) {
+        if (existing.isExpired()) {
             throw InvalidTokenException("Email verification token is expired")
         }
 
         val now = Instant.now()
-        val usedToken = existing.copy(usedAt = now)
-        authTokenRepository.save(usedToken)
-        userRepository.save(existing.user.copy(isEmailVerified = true))
+        existing.usedAt = now
+        val user = existing.user
+        user.isEmailVerified = true
+
+        authTokenRepository.save(existing)
+        userRepository.save(user)
     }
 }

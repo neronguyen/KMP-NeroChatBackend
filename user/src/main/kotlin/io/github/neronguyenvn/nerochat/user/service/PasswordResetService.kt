@@ -53,11 +53,11 @@ class PasswordResetService(
         val existingToken = authTokenRepository.findByIdOrNull(token)
             ?: throw InvalidTokenException("Password reset token is invalid")
 
-        if (existingToken.isUsed) {
+        if (existingToken.isUsed()) {
             throw InvalidTokenException("Password reset  token is already used")
         }
 
-        if (existingToken.isExpired) {
+        if (existingToken.isExpired()) {
             throw InvalidTokenException("Password reset token is expired")
         }
 
@@ -70,7 +70,8 @@ class PasswordResetService(
         refreshTokenRepository.deleteByUserId(user.id!!)
 
         val newHashedPassword = passwordEncoder.encode(newPassword)!!
-        userRepository.save(user.copy(hashedPassword = newHashedPassword))
+        user.hashedPassword = newHashedPassword
+        userRepository.save(user)
     }
 
     @Transactional
@@ -91,7 +92,8 @@ class PasswordResetService(
 
         refreshTokenRepository.deleteByUserId(user.id!!)
 
-        val newPasswordHash = passwordEncoder.encode(newPassword)!!
-        userRepository.save(user.copy(hashedPassword = newPasswordHash))
+        val newHashedPassword = passwordEncoder.encode(newPassword)!!
+        user.hashedPassword = newHashedPassword
+        userRepository.save(user)
     }
 }

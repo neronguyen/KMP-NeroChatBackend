@@ -2,15 +2,7 @@ package io.github.neronguyenvn.nerochat.user.infra.database.model
 
 import io.github.neronguyenvn.nerochat.user.domain.model.AuthToken
 import io.github.neronguyenvn.nerochat.user.domain.model.AuthTokenType
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.EnumType
-import jakarta.persistence.Enumerated
-import jakarta.persistence.FetchType
-import jakarta.persistence.Id
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.ManyToOne
-import jakarta.persistence.Table
+import jakarta.persistence.*
 import org.hibernate.annotations.CreationTimestamp
 import java.time.Instant
 
@@ -19,32 +11,30 @@ import java.time.Instant
     name = "auth_tokens",
     schema = "user_service",
 )
-data class AuthTokenEntity(
+class AuthTokenEntity(
 
     @Id
-    val token: String,
+    var token: String,
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    val tokenType: AuthTokenType,
+    var tokenType: AuthTokenType,
 
     @Column(nullable = false)
-    val expiredAt: Instant,
+    var expiredAt: Instant,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    val user: UserEntity,
+    var user: UserEntity,
 
-    val usedAt: Instant? = null,
+    var usedAt: Instant? = null,
 
     @CreationTimestamp
     var createdAt: Instant = Instant.now(),
 ) {
-    val isUsed: Boolean
-        get() = usedAt != null
+    fun isUsed() = usedAt != null
 
-    val isExpired: Boolean
-        get() = Instant.now().isAfter(expiredAt)
+    fun isExpired() = Instant.now().isAfter(expiredAt)
 }
 
 fun AuthTokenEntity.asEmailVerificationToken(): AuthToken.EmailVerification {

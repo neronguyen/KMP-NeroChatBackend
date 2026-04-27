@@ -1,15 +1,9 @@
 package io.github.neronguyenvn.nerochat.user.infra.database.model
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
-import jakarta.persistence.Index
-import jakarta.persistence.Table
+import jakarta.persistence.*
 import org.hibernate.annotations.CreationTimestamp
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 @Entity
 @Table(
@@ -20,21 +14,21 @@ import java.util.UUID
         Index(name = "idx_refresh_tokens_user_token", columnList = "user_id,hashed_token"),
     ]
 )
-data class RefreshTokenEntity(
+class RefreshTokenEntity(
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long = 0,
+    var id: Long = 0,
 
     @Column(nullable = false)
-    val userId: UUID,
+    var userId: UUID,
 
     @Column(nullable = false)
-    val hashedToken: String,
+    var hashedToken: String,
 
     @Column(nullable = false)
-    val expiredAt: Instant,
+    var expiredAt: Instant,
 
     @CreationTimestamp
-    val createdAt: Instant = Instant.now(),
+    var createdAt: Instant = Instant.now(),
 )
