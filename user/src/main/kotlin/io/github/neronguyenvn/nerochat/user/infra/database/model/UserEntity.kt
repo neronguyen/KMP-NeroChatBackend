@@ -15,27 +15,27 @@ import java.util.*
         Index(name = "idx_users_email", columnList = "email"),
     ]
 )
-data class UserEntity(
+class UserEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    val id: UUID? = null,
+    var id: UUID? = null,
 
     @Column(unique = true, nullable = false)
-    val email: String,
+    var email: String,
 
     @Column(nullable = false)
-    val displayName: String,
+    var displayName: String,
 
     @Column(nullable = false)
-    val hashedPassword: String,
+    var hashedPassword: String,
 
-    val isEmailVerified: Boolean = false,
+    var isEmailVerified: Boolean = false,
 
     @CreationTimestamp
-    val createdAt: Instant = Instant.now(),
+    var createdAt: Instant = Instant.now(),
 
     @UpdateTimestamp
-    val updatedAt: Instant = Instant.now(),
+    var updatedAt: Instant = Instant.now(),
 )
 
 fun UserEntity.asExternalModel(): User {
