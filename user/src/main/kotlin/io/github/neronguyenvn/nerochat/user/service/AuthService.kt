@@ -106,6 +106,10 @@ class AuthService(
 
     @Transactional
     fun logout(refreshToken: String) {
+        if (!jwtService.validateRefreshToken(refreshToken)) {
+            throw InvalidTokenException("Invalid refresh token")
+        }
+
         val userId = jwtService.getUserIdFromToken(refreshToken)
         val hashToken = hashToken(refreshToken)
         refreshTokenRepository.deleteByUserIdAndHashedToken(userId, hashToken)
