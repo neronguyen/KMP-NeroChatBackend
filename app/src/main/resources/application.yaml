@@ -20,6 +20,14 @@ spring:
         socketTimeout: 30
         connectTimeout: 10
 
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: 19697
+      password: ${REDIS_PASSWORD}
+      connect-timeout: 5000ms
+      timeout: 2000ms
+
   jpa:
     open-in-view: false
 
