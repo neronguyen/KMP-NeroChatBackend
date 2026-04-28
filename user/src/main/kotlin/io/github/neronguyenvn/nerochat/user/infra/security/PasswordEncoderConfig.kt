@@ -1,4 +1,4 @@
-package io.github.neronguyenvn.nerochat.user.infra.database.security
+package io.github.neronguyenvn.nerochat.user.infra.security
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration

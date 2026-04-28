@@ -1,7 +1,7 @@
-package io.github.neronguyenvn.nerochat.user.infra.database.security
+package io.github.neronguyenvn.nerochat.user.infra.security
 
 import java.security.SecureRandom
-import java.util.Base64
+import java.util.*
 
 object SecureTokenGenerator {
 
