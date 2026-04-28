@@ -9,3 +9,6 @@ spring:
 
 jwt:
   expiration-minutes: 240
+
+nginx:
+  require-proxy: false
