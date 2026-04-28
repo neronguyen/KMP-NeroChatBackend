@@ -11,7 +11,7 @@ import io.github.neronguyenvn.nerochat.user.infra.database.model.asPasswordReset
 import io.github.neronguyenvn.nerochat.user.infra.database.repository.AuthTokenRepository
 import io.github.neronguyenvn.nerochat.user.infra.database.repository.RefreshTokenRepository
 import io.github.neronguyenvn.nerochat.user.infra.database.repository.UserRepository
-import io.github.neronguyenvn.nerochat.user.infra.database.security.SecureTokenGenerator
+import io.github.neronguyenvn.nerochat.user.infra.security.SecureTokenGenerator
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
