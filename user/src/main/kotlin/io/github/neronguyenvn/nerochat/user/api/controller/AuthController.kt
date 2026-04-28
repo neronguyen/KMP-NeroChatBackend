@@ -1,5 +1,6 @@
 package io.github.neronguyenvn.nerochat.user.api.controller
 
+import io.github.neronguyenvn.nerochat.user.api.config.IpRateLimiting
 import io.github.neronguyenvn.nerochat.user.api.dto.AuthenticatedUserDto
 import io.github.neronguyenvn.nerochat.user.api.dto.UserDto
 import io.github.neronguyenvn.nerochat.user.api.dto.asDto
@@ -26,6 +27,7 @@ class AuthController(
 ) {
 
     @PostMapping("/register")
+    @IpRateLimiting
     fun register(
         @Valid @RequestBody body: RegisterRequest
     ): UserDto {
@@ -37,6 +39,7 @@ class AuthController(
     }
 
     @PostMapping("/resend-verification")
+    @IpRateLimiting
     fun resendVerification(
         @Valid @RequestBody body: EmailRequest
     ) {
@@ -46,6 +49,7 @@ class AuthController(
     }
 
     @PostMapping("/login")
+    @IpRateLimiting
     fun login(
         @Valid @RequestBody body: LoginRequest
     ): AuthenticatedUserDto {
@@ -56,6 +60,7 @@ class AuthController(
     }
 
     @PostMapping("/refresh-token")
+    @IpRateLimiting
     fun refreshToken(
         @Valid @RequestBody body: RefreshTokenRequest
     ): AuthenticatedUserDto {
@@ -80,6 +85,7 @@ class AuthController(
 
     @PostMapping("/forgot-password")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @IpRateLimiting
     fun forgotPassword(
         @Valid @RequestBody body: EmailRequest
     ) {
