@@ -8,6 +8,7 @@ import io.github.neronguyenvn.nerochat.user.domain.exception.UserNotFoundExcepti
 import io.github.neronguyenvn.nerochat.user.service.AuthService
 import io.github.neronguyenvn.nerochat.user.service.EmailVerificationService
 import io.github.neronguyenvn.nerochat.user.service.PasswordResetService
+import io.github.neronguyenvn.nerochat.user.service.ratelimiting.EmailRateLimitingService
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -20,7 +21,8 @@ import java.util.*
 class AuthController(
     private val userService: AuthService,
     private val emailVerificationService: EmailVerificationService,
-    private val passwordResetService: PasswordResetService
+    private val passwordResetService: PasswordResetService,
+    private val emailRateLimit: EmailRateLimitingService
 ) {
 
     @PostMapping("/register")
@@ -32,6 +34,15 @@ class AuthController(
             displayName = body.displayName,
             password = body.password
         ).asDto()
+    }
+
+    @PostMapping("/resend-verification")
+    fun resendVerification(
+        @Valid @RequestBody body: EmailRequest
+    ) {
+        emailRateLimit(body.email) {
+            emailVerificationService.resendVerificationEmail(body.email)
+        }
     }
 
     @PostMapping("/login")
@@ -74,7 +85,7 @@ class AuthController(
     ) {
         try {
             passwordResetService.requestPasswordReset(body.email)
-        } catch (e: UserNotFoundException) {
+        } catch (_: UserNotFoundException) {
             // Intentionally swallowed — never reveal whether the email is registered
         }
     }
