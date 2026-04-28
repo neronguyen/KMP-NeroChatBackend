@@ -12,3 +12,7 @@ jwt:
 
 nginx:
   require-proxy: false
+
+rate-limit:
+  ip:
+    apply-limit: false
