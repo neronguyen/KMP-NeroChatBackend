@@ -13,7 +13,6 @@ import io.github.neronguyenvn.nerochat.user.service.ratelimiting.EmailRateLimiti
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.annotation.AuthenticationPrincipal
-import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.bind.annotation.*
 import java.util.*
 
@@ -109,9 +108,8 @@ class AuthController(
     @PostMapping("/change-password")
     fun changePassword(
         @Valid @RequestBody body: ChangePasswordRequest,
-        @AuthenticationPrincipal userDetails: UserDetails
+        @AuthenticationPrincipal userId: UUID
     ) {
-        val userId = UUID.fromString(userDetails.username)
         passwordResetService.changePassword(
             userId = userId,
             oldPassword = body.oldPassword,
