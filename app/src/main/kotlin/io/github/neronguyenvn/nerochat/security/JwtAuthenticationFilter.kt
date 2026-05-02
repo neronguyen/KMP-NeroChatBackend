@@ -5,8 +5,8 @@ import io.github.neronguyenvn.nerochat.user.service.JwtService
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 
@@ -18,15 +18,16 @@ class JwtAuthenticationFilter(private val jwtService: JwtService) : OncePerReque
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
-        val token = resolveToken(request)
-
-        if (token != null && jwtService.validateAccessToken(token)) {
+        val accessToken = resolveToken(request)
+        if (accessToken != null && jwtService.validateAccessToken(accessToken)) {
             try {
-                val auth = jwtService.getAuthentication(token)
-                val principal = auth.principal as? UserDetails
-                if (principal != null && principal.isEnabled) {
-                    SecurityContextHolder.getContext().authentication = auth
-                }
+                val userId = jwtService.getUserIdFromToken(accessToken)
+                val auth = UsernamePasswordAuthenticationToken(
+                    userId,
+                    null,
+                    emptyList()
+                )
+                SecurityContextHolder.getContext().authentication = auth
             } catch (_: UserNotFoundException) {
                 // leave context anonymous; downstream authorization will return 401
             }
@@ -38,7 +39,7 @@ class JwtAuthenticationFilter(private val jwtService: JwtService) : OncePerReque
     private fun resolveToken(request: HttpServletRequest): String? {
         val bearerToken = request.getHeader(AUTHORIZATION_HEADER) ?: return null
         if (!bearerToken.startsWith(AUTHORIZATION_PREFIX)) return null
-        return bearerToken.substring(AUTHORIZATION_PREFIX.length)
+        return bearerToken.drop(AUTHORIZATION_PREFIX.length)
     }
 
     companion object {
