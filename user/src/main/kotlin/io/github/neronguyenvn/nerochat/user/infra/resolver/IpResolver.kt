@@ -30,8 +30,8 @@ class IpResolver(
         val remoteAddr = request.remoteAddr
         if (!isFromTrustedProxy(remoteAddr)) {
             if (nginxConfig.requireProxy) {
-                logger.warn("Direct connection attempt from $remoteAddr")
-                throw SecurityException("No valid client IP in proxy headers")
+                logger.warn("Direct connection attempt from $remoteAddr, not via a trusted proxy")
+                throw SecurityException("Request not from a trusted proxy")
             }
 
             return remoteAddr
