@@ -30,7 +30,12 @@ class IpRateLimitingInterceptor(
                 IpRateLimiting::class.java
             ) ?: return true
 
-            val clientIp = ipResolver.getClientIp(request)
+            val clientIp = try {
+                ipResolver.getClientIp(request)
+            } catch (_: SecurityException) {
+                response.sendError(HttpStatus.FORBIDDEN.value())
+            }
+
             val methodKey = "${handler.beanType.simpleName}:${handler.method.name}"
             val compositeKey = "$clientIp:$methodKey"
 
