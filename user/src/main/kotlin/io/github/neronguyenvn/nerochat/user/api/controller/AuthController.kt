@@ -44,7 +44,11 @@ class AuthController(
         @Valid @RequestBody body: EmailRequest
     ) {
         emailRateLimit(body.email) {
-            emailVerificationService.resendVerificationEmail(body.email)
+            try {
+                emailVerificationService.resendVerificationEmail(body.email)
+            } catch (_: UserNotFoundException) {
+                // Intentionally swallowed — never reveal whether the email is registered
+            }
         }
     }
 
