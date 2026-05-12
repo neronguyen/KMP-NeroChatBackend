@@ -76,7 +76,7 @@ class IpResolver(
                     Inet4Address.getByName(trimmedIp)
                 }
 
-                else -> throw IllegalArgumentException()
+                else -> throw IllegalArgumentException("Not a recognised IPv4 or IPv6 address: $trimmedIp")
             }
 
             if (isPrivateIp(inetAddr.hostAddress)) {
