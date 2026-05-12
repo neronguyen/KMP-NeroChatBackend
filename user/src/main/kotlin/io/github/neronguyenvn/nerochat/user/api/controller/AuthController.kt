@@ -38,6 +38,7 @@ class AuthController(
     }
 
     @PostMapping("/resend-verification")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @IpRateLimiting
     fun resendVerification(
         @Valid @RequestBody body: EmailRequest
