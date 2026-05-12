@@ -2,6 +2,9 @@ spring:
   application:
     name: nerochat
 
+  config:
+    import: file:local.properties
+
   datasource:
     url: ${POSTGRES_URL}
     username: ${POSTGRES_USERNAME}
@@ -20,6 +23,14 @@ spring:
         socketTimeout: 30
         connectTimeout: 10
 
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+      connect-timeout: 5000ms
+      timeout: 2000ms
+
   jpa:
     open-in-view: false
 
@@ -31,3 +42,10 @@ email:
     expiry-hours: 24
   password-reset:
     expiry-minutes: 15
+
+nginx:
+  trusted-ips:
+    - "127.0.0.1" # nginx on same machine
+    - "::1" # IPv6 localhost
+    - "172.17.0.0/16" # nginx container IP when using Docker
+    - "10.0.0.5/32" # nginx server IP (if separate machine)

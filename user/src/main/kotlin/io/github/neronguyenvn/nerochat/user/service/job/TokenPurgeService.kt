@@ -1,4 +1,4 @@
-package io.github.neronguyenvn.nerochat.user.service
+package io.github.neronguyenvn.nerochat.user.service.job
 
 import io.github.neronguyenvn.nerochat.user.infra.database.repository.AuthTokenRepository
 import org.springframework.scheduling.annotation.Scheduled
