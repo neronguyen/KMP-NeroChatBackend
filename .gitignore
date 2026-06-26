@@ -39,5 +39,8 @@ out/
 ### Kotlin ###
 .kotlin
 
-# Local configuration file (sdk path, etc)
+### Local configuration file (sdk path, etc) ###
 local.properties
+
+# Structurizr configuration files ###
+.structurizr
