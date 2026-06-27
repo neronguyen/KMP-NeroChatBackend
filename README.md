@@ -8,6 +8,8 @@ Backend API for Nero Chat — a simple chat application where users register an 
 
 ## Architecture
 
+Structurizr setup is only tested on Podman.
+
 ### System Context
 
 ![System Context](docs/diagrams/SystemContext.png)
