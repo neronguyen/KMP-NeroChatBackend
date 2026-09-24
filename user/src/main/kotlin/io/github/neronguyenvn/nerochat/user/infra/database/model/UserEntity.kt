@@ -1,5 +1,6 @@
 package io.github.neronguyenvn.nerochat.user.infra.database.model
 
+import io.github.neronguyenvn.nerochat.domain.type.UserId
 import io.github.neronguyenvn.nerochat.user.domain.model.User
 import jakarta.persistence.*
 import org.hibernate.annotations.CreationTimestamp
@@ -40,7 +41,7 @@ class UserEntity(
 
 fun UserEntity.asExternalModel(): User {
     return User(
-        id = id!!,
+        id = UserId(id!!.toString()),
         email = email,
         isEmailVerified = isEmailVerified
     )

@@ -5,6 +5,7 @@ plugins {
 }
 
 dependencies {
+    implementation(projects.common)
     implementation(projects.user)
     implementation(projects.chat)
     implementation(projects.notification)

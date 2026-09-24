@@ -1,5 +1,6 @@
 package io.github.neronguyenvn.nerochat.user.service
 
+import io.github.neronguyenvn.nerochat.domain.type.UserId
 import io.github.neronguyenvn.nerochat.user.domain.exception.InvalidTokenException
 import io.github.neronguyenvn.nerochat.user.domain.exception.SamePasswordException
 import io.github.neronguyenvn.nerochat.user.domain.exception.UserNotFoundException
@@ -81,11 +82,12 @@ class PasswordResetService(
 
     @Transactional
     fun changePassword(
-        userId: UUID,
+        userId: UserId,
         oldPassword: String,
         newPassword: String
     ) {
-        val user = userRepository.findByIdOrNull(userId) ?: error("User cannot be null")
+        val user = userRepository.findByIdOrNull(UUID.fromString(userId.value))
+            ?: error("User cannot be null")
 
         if (!passwordEncoder.matches(oldPassword, user.hashedPassword)) {
             throw WrongPasswordException()

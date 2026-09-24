@@ -1,9 +1,9 @@
 package io.github.neronguyenvn.nerochat.user.domain.model
 
-import java.util.UUID
+import io.github.neronguyenvn.nerochat.domain.type.UserId
 
 data class User(
-    val id: UUID,
+    val id: UserId,
     val email: String,
     val isEmailVerified: Boolean,
 )

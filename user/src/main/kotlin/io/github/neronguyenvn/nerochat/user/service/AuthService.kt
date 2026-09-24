@@ -1,5 +1,6 @@
 package io.github.neronguyenvn.nerochat.user.service
 
+import io.github.neronguyenvn.nerochat.domain.type.UserId
 import io.github.neronguyenvn.nerochat.user.domain.exception.*
 import io.github.neronguyenvn.nerochat.user.domain.model.AuthenticatedUser
 import io.github.neronguyenvn.nerochat.user.domain.model.User
@@ -62,7 +63,7 @@ class AuthService(
         if (!matches) throw InvalidCredentialsException()
         if (!existing.isEmailVerified) throw EmailNotVerifiedException()
 
-        val userId = existing.id ?: error("User ID cannot be null")
+        val userId = UserId((existing.id ?: error("User ID cannot be null")).toString())
         val accessToken = jwtService.generateAccessToken(userId)
         val refreshToken = jwtService.generateRefreshToken(userId)
 
@@ -84,13 +85,13 @@ class AuthService(
         val userId = jwtService.getUserIdFromToken(refreshToken)
         val hashedToken = hashToken(refreshToken)
 
-        val user = userRepository.findByIdOrNull(userId)
+        val user = userRepository.findByIdOrNull(UUID.fromString(userId.value))
             ?: throw UserNotFoundException()
 
-        refreshTokenRepository.findByUserIdAndHashedToken(userId, hashedToken)
+        refreshTokenRepository.findByUserIdAndHashedToken(UUID.fromString(userId.value), hashedToken)
             ?: throw InvalidTokenException("Invalid refresh token")
 
-        refreshTokenRepository.deleteByUserIdAndHashedToken(userId, hashedToken)
+        refreshTokenRepository.deleteByUserIdAndHashedToken(UUID.fromString(userId.value), hashedToken)
 
         val newAccessToken = jwtService.generateAccessToken(userId)
         val newRefreshToken = jwtService.generateRefreshToken(userId)
@@ -112,16 +113,16 @@ class AuthService(
 
         val userId = jwtService.getUserIdFromToken(refreshToken)
         val hashToken = hashToken(refreshToken)
-        refreshTokenRepository.deleteByUserIdAndHashedToken(userId, hashToken)
+        refreshTokenRepository.deleteByUserIdAndHashedToken(UUID.fromString(userId.value), hashToken)
     }
 
-    private fun saveRefreshToken(userId: UUID, refreshToken: String) {
+    private fun saveRefreshToken(userId: UserId, refreshToken: String) {
         val hashedToken = hashToken(refreshToken)
         val expiryMillis = jwtService.refreshTokenValidityMs
         val expiredAt = Instant.now().plusMillis(expiryMillis)
 
         val entity = RefreshTokenEntity(
-            userId = userId,
+            userId = UUID.fromString(userId.value),
             hashedToken = hashedToken,
             expiredAt = expiredAt
         )

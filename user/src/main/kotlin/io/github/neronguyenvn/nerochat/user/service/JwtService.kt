@@ -1,5 +1,6 @@
 package io.github.neronguyenvn.nerochat.user.service
 
+import io.github.neronguyenvn.nerochat.domain.type.UserId
 import io.github.neronguyenvn.nerochat.user.domain.exception.InvalidTokenException
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
@@ -22,7 +23,7 @@ class JwtService(
 
     private val accessTokenValidityMs = expirationMinutes * 60 * 1000L
 
-    fun generateAccessToken(userId: UUID): String {
+    fun generateAccessToken(userId: UserId): String {
         return generateToken(
             userId = userId,
             type = VALUE_CLAIMS_TYPE_ACCESS,
@@ -30,7 +31,7 @@ class JwtService(
         )
     }
 
-    fun generateRefreshToken(userId: UUID): String {
+    fun generateRefreshToken(userId: UserId): String {
         return generateToken(
             userId = userId,
             type = VALUE_CLAIMS_TYPE_REFRESH,
@@ -50,15 +51,15 @@ class JwtService(
         return tokenType == VALUE_CLAIMS_TYPE_REFRESH
     }
 
-    fun getUserIdFromToken(token: String): UUID {
+    fun getUserIdFromToken(token: String): UserId {
         val claims = parseAllClaims(token) ?: throw InvalidTokenException(
             message = "The attached JWT token is not valid"
         )
-        return UUID.fromString(claims.subject)
+        return UserId(claims.subject)
     }
 
     private fun generateToken(
-        userId: UUID,
+        userId: UserId,
         type: String,
         expiry: Long
     ): String {
@@ -67,7 +68,7 @@ class JwtService(
         val algorithm = Jwts.SIG.HS256
 
         return Jwts.builder()
-            .subject(userId.toString())
+            .subject(userId.value)
             .claim(KEY_CLAIMS_TYPE, type)
             .issuedAt(now)
             .expiration(expiryDate)

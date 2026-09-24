@@ -1,5 +1,6 @@
 package io.github.neronguyenvn.nerochat.user.api.controller
 
+import io.github.neronguyenvn.nerochat.domain.type.UserId
 import io.github.neronguyenvn.nerochat.user.api.config.IpRateLimiting
 import io.github.neronguyenvn.nerochat.user.api.dto.AuthenticatedUserDto
 import io.github.neronguyenvn.nerochat.user.api.dto.UserDto
@@ -14,7 +15,6 @@ import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
-import java.util.*
 
 @RestController
 @RequestMapping("/api/auth")
@@ -113,7 +113,7 @@ class AuthController(
     @PostMapping("/change-password")
     fun changePassword(
         @Valid @RequestBody body: ChangePasswordRequest,
-        @AuthenticationPrincipal userId: UUID
+        @AuthenticationPrincipal userId: UserId
     ) {
         passwordResetService.changePassword(
             userId = userId,
