@@ -9,9 +9,8 @@ import io.github.neronguyenvn.nerochat.user.domain.model.AuthToken
 import io.github.neronguyenvn.nerochat.user.domain.model.AuthTokenType
 import io.github.neronguyenvn.nerochat.user.infra.database.model.AuthTokenEntity
 import io.github.neronguyenvn.nerochat.user.infra.database.model.asPasswordResetToken
-import io.github.neronguyenvn.nerochat.user.infra.database.repository.AuthTokenRepository
-import io.github.neronguyenvn.nerochat.user.infra.database.repository.RefreshTokenRepository
-import io.github.neronguyenvn.nerochat.user.infra.database.repository.UserRepository
+import io.github.neronguyenvn.nerochat.user.infra.database.model.userId
+import io.github.neronguyenvn.nerochat.user.infra.database.repository.*
 import io.github.neronguyenvn.nerochat.user.infra.security.SecureTokenGenerator
 import jakarta.transaction.Transactional
 import org.springframework.beans.factory.annotation.Value
@@ -20,7 +19,6 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.time.temporal.ChronoUnit
-import java.util.*
 
 @Service
 class PasswordResetService(
@@ -70,7 +68,7 @@ class PasswordResetService(
             throw SamePasswordException()
         }
 
-        refreshTokenRepository.deleteByUserId(user.id!!)
+        refreshTokenRepository.deleteByUserId(user.userId)
 
         val newHashedPassword = passwordEncoder.encode(newPassword)!!
         user.hashedPassword = newHashedPassword
@@ -86,7 +84,7 @@ class PasswordResetService(
         oldPassword: String,
         newPassword: String
     ) {
-        val user = userRepository.findByIdOrNull(UUID.fromString(userId.value))
+        val user = userRepository.findByUserId(userId)
             ?: error("User cannot be null")
 
         if (!passwordEncoder.matches(oldPassword, user.hashedPassword)) {
@@ -97,7 +95,7 @@ class PasswordResetService(
             throw SamePasswordException()
         }
 
-        refreshTokenRepository.deleteByUserId(user.id!!)
+        refreshTokenRepository.deleteByUserId(user.userId)
 
         val newHashedPassword = passwordEncoder.encode(newPassword)!!
         user.hashedPassword = newHashedPassword

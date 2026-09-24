@@ -1,5 +1,6 @@
 package io.github.neronguyenvn.nerochat.user.infra.database.model
 
+import io.github.neronguyenvn.nerochat.domain.type.UserId
 import jakarta.persistence.*
 import org.hibernate.annotations.CreationTimestamp
 import java.time.Instant
@@ -14,7 +15,7 @@ import java.util.*
         Index(name = "idx_refresh_tokens_user_token", columnList = "user_id,hashed_token"),
     ]
 )
-class RefreshTokenEntity(
+class RefreshTokenEntity private constructor(
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,4 +32,14 @@ class RefreshTokenEntity(
 
     @CreationTimestamp
     var createdAt: Instant = Instant.now(),
-)
+) {
+    constructor(
+        userId: UserId,
+        hashedToken: String,
+        expiredAt: Instant,
+    ) : this(
+        userId = UUID.fromString(userId.value),
+        hashedToken = hashedToken,
+        expiredAt = expiredAt,
+    )
+}

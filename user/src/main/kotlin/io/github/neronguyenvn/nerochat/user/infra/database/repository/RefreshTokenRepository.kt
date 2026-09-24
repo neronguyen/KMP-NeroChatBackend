@@ -1,9 +1,10 @@
 package io.github.neronguyenvn.nerochat.user.infra.database.repository
 
+import io.github.neronguyenvn.nerochat.domain.type.UserId
 import io.github.neronguyenvn.nerochat.user.infra.database.model.RefreshTokenEntity
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
-import java.util.UUID
+import java.util.*
 
 @Repository
 interface RefreshTokenRepository : JpaRepository<RefreshTokenEntity, Long> {
@@ -14,3 +15,14 @@ interface RefreshTokenRepository : JpaRepository<RefreshTokenEntity, Long> {
 
     fun deleteByUserId(userId: UUID)
 }
+
+fun RefreshTokenRepository.findByUserIdAndHashedToken(
+    userId: UserId,
+    hashedToken: String,
+): RefreshTokenEntity? = findByUserIdAndHashedToken(UUID.fromString(userId.value), hashedToken)
+
+fun RefreshTokenRepository.deleteByUserIdAndHashedToken(userId: UserId, hashedToken: String) =
+    deleteByUserIdAndHashedToken(UUID.fromString(userId.value), hashedToken)
+
+fun RefreshTokenRepository.deleteByUserId(userId: UserId) =
+    deleteByUserId(UUID.fromString(userId.value))

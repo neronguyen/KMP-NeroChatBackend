@@ -39,9 +39,12 @@ class UserEntity(
     var updatedAt: Instant = Instant.now(),
 )
 
+val UserEntity.userId: UserId
+    get() = UserId((id ?: error("User ID cannot be null")).toString())
+
 fun UserEntity.asExternalModel(): User {
     return User(
-        id = UserId(id!!.toString()),
+        id = userId,
         email = email,
         isEmailVerified = isEmailVerified
     )
