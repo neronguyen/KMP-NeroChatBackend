@@ -1,6 +1,8 @@
 package io.github.neronguyenvn.nerochat.user.service
 
+import io.github.neronguyenvn.nerochat.domain.event.UserEvent
 import io.github.neronguyenvn.nerochat.domain.type.UserId
+import io.github.neronguyenvn.nerochat.infra.messagequeue.EventPublisher
 import io.github.neronguyenvn.nerochat.user.domain.exception.*
 import io.github.neronguyenvn.nerochat.user.domain.model.AuthenticatedUser
 import io.github.neronguyenvn.nerochat.user.domain.model.User
@@ -23,6 +25,7 @@ class AuthService(
     private val emailVerificationService: EmailVerificationService,
     private val passwordEncoder: PasswordEncoder,
     private val jwtService: JwtService,
+    private val eventPublisher: EventPublisher
 ) {
     @Transactional
     fun register(
@@ -43,7 +46,15 @@ class AuthService(
             )
         )
 
-        emailVerificationService.createVerificationToken(email)
+        val token = emailVerificationService.createVerificationToken(email)
+        eventPublisher.publish(
+            event = UserEvent.Created(
+                userId = saved.userId,
+                email = email,
+                verificationToken = token.token
+            )
+        )
+
         return saved.asExternalModel()
     }
 

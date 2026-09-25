@@ -3,5 +3,6 @@ plugins {
 }
 
 dependencies {
-    testImplementation(kotlin("test"))
+    implementation(projects.common)
+    implementation(libs.spring.boot.starter.amqp)
 }
