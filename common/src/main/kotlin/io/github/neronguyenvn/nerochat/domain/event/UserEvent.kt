@@ -1,20 +1,13 @@
-package io.github.neronguyenvn.nerochat.domain.event.user
+package io.github.neronguyenvn.nerochat.domain.event
 
-import io.github.neronguyenvn.nerochat.domain.event.ChatEvent
 import io.github.neronguyenvn.nerochat.domain.type.UserId
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import java.util.*
-import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
+import kotlin.time.Duration
 
-@OptIn(ExperimentalTime::class)
 @Serializable
 sealed class UserEvent(
-    override val id: String = UUID.randomUUID().toString(),
-    override val exchange: String = EXCHANGE,
-    override val occurredAt: Instant = Clock.System.now(),
+    override val exchangeName: String = EXCHANGE_NAME,
 ) : ChatEvent() {
 
     @Serializable
@@ -49,12 +42,12 @@ sealed class UserEvent(
         val userId: UserId,
         val email: String,
         val verificationToken: String,
-        val expiresInMinutes: Long,
+        val expiresInMinutes: Duration,
         override val key: String = REQUEST_RESET_PASSWORD_KEY,
     ) : UserEvent()
 
     companion object {
-        const val EXCHANGE = "user.events"
+        const val EXCHANGE_NAME = "user.events"
 
         const val CREATED_KEY = "user.created"
         const val VERIFIED_KEY = "user.verified"
