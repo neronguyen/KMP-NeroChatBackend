@@ -37,6 +37,7 @@ spring:
   rabbitmq:
     host: ${RABBITMQ_HOST}
     username: ${RABBITMQ_USERNAME}
+    virtual-host: ${RABBITMQ_USERNAME}
     password: ${RABBITMQ_PASSWORD}
     ssl:
       enabled: true
