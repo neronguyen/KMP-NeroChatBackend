@@ -6,9 +6,9 @@ import kotlinx.serialization.Serializable
 import kotlin.time.Duration
 
 @Serializable
-sealed class UserEvent(
-    override val exchangeName: String = EXCHANGE_NAME,
-) : ChatEvent() {
+sealed class UserEvent : ChatEvent() {
+
+    override val exchangeName: String = EXCHANGE_NAME
 
     @Serializable
     @SerialName(CREATED_KEY)
@@ -42,12 +42,14 @@ sealed class UserEvent(
         val userId: UserId,
         val email: String,
         val verificationToken: String,
-        val expiresInMinutes: Duration,
+        val expiresIn: Duration,
         override val key: String = REQUEST_RESET_PASSWORD_KEY,
     ) : UserEvent()
 
     companion object {
         const val EXCHANGE_NAME = "user.events"
+        const val QUEUE_NAME = "user.events"
+        const val ROUTING_KEY_PATTERN = "user.*"
 
         const val CREATED_KEY = "user.created"
         const val VERIFIED_KEY = "user.verified"

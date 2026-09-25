@@ -1,7 +1,8 @@
 package io.github.neronguyenvn.nerochat.infra.messagequeue
 
-import io.github.neronguyenvn.nerochat.domain.event.user.UserEvent
-import kotlinx.serialization.json.Json
+import io.github.neronguyenvn.nerochat.domain.event.UserEvent
+import org.springframework.amqp.core.Binding
+import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.core.TopicExchange
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
@@ -13,34 +14,41 @@ import org.springframework.context.annotation.Configuration
 class RabbitMqConfig {
 
     @Bean
+    fun messageConverter(): KotlinSerializationJsonAmqpMessageConverter {
+        return KotlinSerializationJsonAmqpMessageConverter()
+    }
+
+    @Bean
     fun rabbitTemplate(
         connectionFactory: ConnectionFactory,
+        messageConverter: KotlinSerializationJsonAmqpMessageConverter
     ): RabbitTemplate {
-        val messageConverter = KotlinSerializationJsonAmqpMessageConverter(
-            Json {
-                classDiscriminator = EVENT_TYPE
-            }
-        )
         return RabbitTemplate(connectionFactory).apply {
             this.messageConverter = messageConverter
         }
     }
 
     @Bean
-    fun userExchange() = TopicExchange(
-        UserEvent.EXCHANGE,
+    fun exchangeUserEvents() = TopicExchange(
+        UserEvent.EXCHANGE_NAME,
         true,
         false
     )
 
     @Bean
-    fun userEventsQueue() = Queue(
-        QUEUE_USER_EVENTS,
+    fun queueUserEvents() = Queue(
+        UserEvent.QUEUE_NAME,
         true
     )
 
-    companion object {
-        const val EVENT_TYPE = "type"
-        const val QUEUE_USER_EVENTS = "user.events"
+    @Bean
+    fun bindingUserEvents(
+        queueUserEvents: Queue,
+        exchangeUserEvents: TopicExchange,
+    ): Binding {
+        return BindingBuilder
+            .bind(queueUserEvents)
+            .to(exchangeUserEvents)
+            .with(UserEvent.ROUTING_KEY_PATTERN)
     }
 }

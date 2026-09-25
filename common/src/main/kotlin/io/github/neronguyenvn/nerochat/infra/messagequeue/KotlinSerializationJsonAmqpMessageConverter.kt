@@ -7,7 +7,7 @@ import org.springframework.amqp.core.MessageProperties
 import org.springframework.amqp.support.converter.MessageConverter
 
 class KotlinSerializationJsonAmqpMessageConverter(
-    private val json: Json,
+    private val json: Json = defaultJson
 ) : MessageConverter {
 
     override fun toMessage(
@@ -29,5 +29,13 @@ class KotlinSerializationJsonAmqpMessageConverter(
         return json.decodeFromString<ChatEvent>(
             message.body.decodeToString()
         )
+    }
+
+    private companion object {
+        const val EVENT_TYPE = "type"
+
+        val defaultJson = Json {
+            classDiscriminator = EVENT_TYPE
+        }
     }
 }
