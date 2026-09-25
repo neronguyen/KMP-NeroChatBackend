@@ -12,7 +12,7 @@ data class UserDto(
 
 fun User.asDto(): UserDto {
     return UserDto(
-        id = id.toString(),
+        id = id.value,
         email = email,
         isEmailVerified = isEmailVerified
     )
