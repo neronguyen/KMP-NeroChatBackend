@@ -3,7 +3,7 @@ spring:
     name: nerochat
 
   config:
-    import: file:local.properties
+    import: optional:file:local.properties
 
   datasource:
     url: ${POSTGRES_URL}
