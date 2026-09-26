@@ -51,6 +51,7 @@ class AuthService(
             event = UserEvent.Created(
                 userId = saved.userId,
                 email = email,
+                displayName = displayName,
                 verificationToken = token.token
             )
         )

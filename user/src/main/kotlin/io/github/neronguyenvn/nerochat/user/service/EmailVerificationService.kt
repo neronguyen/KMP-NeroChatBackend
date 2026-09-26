@@ -54,6 +54,7 @@ class EmailVerificationService(
             event = UserEvent.RequestResendVerification(
                 userId = token.user.id,
                 email = email,
+                displayName = token.user.displayName,
                 verificationToken = token.token
             )
         )

@@ -7,10 +7,8 @@ import io.github.neronguyenvn.nerochat.user.domain.exception.InvalidTokenExcepti
 import io.github.neronguyenvn.nerochat.user.domain.exception.SamePasswordException
 import io.github.neronguyenvn.nerochat.user.domain.exception.UserNotFoundException
 import io.github.neronguyenvn.nerochat.user.domain.exception.WrongPasswordException
-import io.github.neronguyenvn.nerochat.user.domain.model.AuthToken
 import io.github.neronguyenvn.nerochat.user.domain.model.AuthTokenType
 import io.github.neronguyenvn.nerochat.user.infra.database.model.AuthTokenEntity
-import io.github.neronguyenvn.nerochat.user.infra.database.model.asPasswordResetToken
 import io.github.neronguyenvn.nerochat.user.infra.database.model.userId
 import io.github.neronguyenvn.nerochat.user.infra.database.repository.*
 import io.github.neronguyenvn.nerochat.user.infra.security.SecureTokenGenerator
@@ -34,30 +32,31 @@ class PasswordResetService(
     @param:Value($$"${email.password-reset.expiry-minutes}") private val expiryMinutes: Long
 ) {
     @Transactional
-    fun requestPasswordReset(email: String): AuthToken.PasswordReset {
+    fun requestPasswordReset(email: String){
         val user = userRepository.findByEmail(email)
             ?: throw UserNotFoundException()
 
         authTokenRepository.invalidatePasswordResetTokens(user)
 
         val expiryDate = Instant.now().plus(expiryMinutes, ChronoUnit.MINUTES)
+        // TODO: Simplify token param
         val token = AuthTokenEntity(
             token = SecureTokenGenerator.generate(),
             expiredAt = expiryDate,
             tokenType = AuthTokenType.PasswordReset,
             user = user
         )
+        authTokenRepository.save(token)
 
         eventPublisher.publish(
             event = UserEvent.RequestResetPassword(
                 userId = user.userId,
                 email = user.email,
+                displayName = user.displayName,
                 passwordResetToken = token.token,
                 expiresIn = expiryMinutes.toDuration(DurationUnit.MINUTES)
             )
         )
-
-        return authTokenRepository.save(token).asPasswordResetToken()
     }
 
     @Transactional
