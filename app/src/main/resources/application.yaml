@@ -1,3 +1,89 @@
 spring:
   application:
     name: nerochat
+
+  config:
+    import: optional:file:local.properties
+
+  datasource:
+    url: ${POSTGRES_URL}
+    username: ${POSTGRES_USERNAME}
+    password: ${POSTGRES_PASSWORD}
+
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1800000
+      pool-name: SpringBootHikariCP
+
+      data-source-properties:
+        tcpKeepAlive: true
+        socketTimeout: 30
+        connectTimeout: 10
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+      connect-timeout: 5000ms
+      timeout: 2000ms
+
+  jpa:
+    open-in-view: false
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    username: ${RABBITMQ_USERNAME}
+    virtual-host: ${RABBITMQ_VHOST}
+    password: ${RABBITMQ_PASSWORD}
+    ssl:
+      enabled: true
+    listener:
+      simple:
+        acknowledge-mode: auto
+        concurrency: 1
+        max-concurrency: 3
+        prefetch: 10
+        default-requeue-rejected: true
+        retry:
+          enabled: true
+          initial-interval: 1000ms
+          max-interval: 10000ms
+          max-attempts: 3
+          multiplier: 2
+
+  mail:
+    host: ${SMTP_HOST}
+    port: ${SMTP_PORT}
+    username: ${SMTP_USERNAME}
+    password: ${SMTP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          connectiontimeout: 10000
+          timeout: 10000
+          writetimeout: 10000
+          starttls:
+            enable: true
+            required: true
+
+jwt:
+  secret: ${JWT_SECRET_BASE64}
+
+email:
+  from: ${SMTP_SENDER}
+  verification:
+    expiry-hours: 24
+  password-reset:
+    expiry-minutes: 15
+
+nginx:
+  trusted-ips:
+    - "127.0.0.1" # nginx on same machine
+    - "::1" # IPv6 localhost
+    - "172.17.0.0/16" # nginx container IP when using Docker
+    - "10.0.0.5/32" # nginx server IP (if separate machine)
