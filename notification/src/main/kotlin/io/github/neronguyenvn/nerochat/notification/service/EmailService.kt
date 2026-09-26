@@ -21,6 +21,10 @@ class EmailService(
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
+    /**
+     * Renders and sends a personalized verification email containing [token] in the verification URL.
+     * [userId] identifies the user in logs; [email] is the delivery address.
+     */
     fun sendVerificationEmail(
         userId: UserId,
         email: String,
@@ -50,6 +54,10 @@ class EmailService(
         )
     }
 
+    /**
+     * Renders and sends a personalized password-reset email containing [token] in the reset URL.
+     * Displays [expiresIn] in whole minutes and uses [userId] for logging.
+     */
     fun sendPasswordResetEmail(
         userId: UserId,
         email: String,
@@ -81,6 +89,10 @@ class EmailService(
         )
     }
 
+    /**
+     * Sends [html] as a UTF-8 HTML email from the configured sender to [to].
+     * [MailException] failures from sending are logged and suppressed; message preparation errors propagate.
+     */
     private fun sendHtmlEmail(
         to: String,
         subject: String,

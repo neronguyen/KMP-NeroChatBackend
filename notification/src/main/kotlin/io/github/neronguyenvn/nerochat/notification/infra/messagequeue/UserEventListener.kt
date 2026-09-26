@@ -10,6 +10,10 @@ class UserEventListener(
     private val emailService: EmailService
 ) {
 
+    /**
+     * Dispatches registration, verification-resend, and password-reset events to the email service.
+     * Verified events require no email and are ignored.
+     */
     @RabbitListener(queues = [UserEvent.QUEUE_NAME])
     fun handleUserEvent(event: UserEvent) {
         when (event) {

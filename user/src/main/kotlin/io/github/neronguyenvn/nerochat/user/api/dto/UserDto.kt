@@ -11,6 +11,7 @@ data class UserDto(
     val isEmailVerified: Boolean,
 )
 
+/** Maps this user to an API response, including the display name and email-verification status. */
 fun User.asDto(): UserDto {
     return UserDto(
         id = id.value,

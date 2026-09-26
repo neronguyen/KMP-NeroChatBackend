@@ -8,6 +8,7 @@ import org.thymeleaf.context.Context
 class EmailTemplateService(
     private val templateEngine: TemplateEngine
 ) {
+    /** Renders [templateName] with [variables] as Thymeleaf context attributes and returns the HTML. */
     fun processTemplate(
         templateName: String,
         variables: Map<String, Any> = emptyMap()

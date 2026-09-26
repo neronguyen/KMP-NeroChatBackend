@@ -11,6 +11,10 @@ class EventPublisher(
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
+    /**
+     * Sends [event] to its exchange using its routing key.
+     * Publishing failures are logged and are not propagated to the caller.
+     */
     fun <T: ChatEvent> publish(event: T) {
         try {
             rabbitTemplate.convertAndSend(

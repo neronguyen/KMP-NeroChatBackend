@@ -31,6 +31,11 @@ class PasswordResetService(
     private val eventPublisher: EventPublisher,
     @param:Value($$"${email.password-reset.expiry-minutes}") private val expiryMinutes: Long
 ) {
+    /**
+     * Invalidates earlier password-reset tokens, saves a new expiring token, and publishes a reset request.
+     *
+     * @throws UserNotFoundException if no user is registered with [email].
+     */
     @Transactional
     fun requestPasswordReset(email: String){
         val user = userRepository.findByEmail(email)

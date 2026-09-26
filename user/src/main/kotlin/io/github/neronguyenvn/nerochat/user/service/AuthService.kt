@@ -27,6 +27,12 @@ class AuthService(
     private val jwtService: JwtService,
     private val eventPublisher: EventPublisher
 ) {
+    /**
+     * Creates a user with an encoded password and a verification token, then publishes a creation event.
+     *
+     * @return the newly persisted user.
+     * @throws UserAlreadyExistsException if [email] is already registered.
+     */
     @Transactional
     fun register(
         email: String,

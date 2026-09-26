@@ -13,11 +13,13 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class RabbitMqConfig {
 
+    /** Creates the JSON converter used to serialize and deserialize chat events. */
     @Bean
     fun messageConverter(): KotlinSerializationJsonAmqpMessageConverter {
         return KotlinSerializationJsonAmqpMessageConverter()
     }
 
+    /** Creates a RabbitMQ template using [connectionFactory] and the event [messageConverter]. */
     @Bean
     fun rabbitTemplate(
         connectionFactory: ConnectionFactory,
@@ -28,6 +30,7 @@ class RabbitMqConfig {
         }
     }
 
+    /** Declares a durable user-event topic exchange that is not automatically deleted. */
     @Bean
     fun exchangeUserEvents() = TopicExchange(
         UserEvent.EXCHANGE_NAME,
@@ -35,12 +38,14 @@ class RabbitMqConfig {
         false
     )
 
+    /** Declares a durable queue for user events. */
     @Bean
     fun queueUserEvents() = Queue(
         UserEvent.QUEUE_NAME,
         true
     )
 
+    /** Routes events matching [UserEvent.ROUTING_KEY_PATTERN] from the exchange to the queue. */
     @Bean
     fun bindingUserEvents(
         queueUserEvents: Queue,

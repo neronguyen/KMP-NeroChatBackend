@@ -10,6 +10,11 @@ class KotlinSerializationJsonAmqpMessageConverter(
     private val json: Json = defaultJson
 ) : MessageConverter {
 
+    /**
+     * Encodes a [ChatEvent] as UTF-8 JSON, retaining the supplied [messageProperties].
+     *
+     * @throws IllegalStateException if the object is not a [ChatEvent].
+     */
     override fun toMessage(
         `object`: Any,
         messageProperties: MessageProperties
@@ -25,6 +30,10 @@ class KotlinSerializationJsonAmqpMessageConverter(
         )
     }
 
+    /**
+     * Decodes the UTF-8 JSON body of [message] into a [ChatEvent].
+     * Deserialization failures are propagated to the caller.
+     */
     override fun fromMessage(message: Message): Any {
         return json.decodeFromString<ChatEvent>(
             message.body.decodeToString()

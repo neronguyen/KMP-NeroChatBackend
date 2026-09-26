@@ -44,6 +44,12 @@ class EmailVerificationService(
         return authTokenRepository.save(token).asEmailVerificationToken()
     }
 
+    /**
+     * Replaces existing verification tokens and publishes a resend request for an unverified user.
+     * A new token is also created for an already verified user, but no event is published.
+     *
+     * @throws UserNotFoundException if no user is registered with [email].
+     */
     @Transactional
     fun resendVerificationEmail(email: String) {
         val token = createVerificationToken(email)
