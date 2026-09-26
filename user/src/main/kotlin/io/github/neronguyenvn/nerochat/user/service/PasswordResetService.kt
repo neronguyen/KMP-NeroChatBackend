@@ -1,6 +1,8 @@
 package io.github.neronguyenvn.nerochat.user.service
 
+import io.github.neronguyenvn.nerochat.domain.event.UserEvent
 import io.github.neronguyenvn.nerochat.domain.type.UserId
+import io.github.neronguyenvn.nerochat.infra.messagequeue.EventPublisher
 import io.github.neronguyenvn.nerochat.user.domain.exception.InvalidTokenException
 import io.github.neronguyenvn.nerochat.user.domain.exception.SamePasswordException
 import io.github.neronguyenvn.nerochat.user.domain.exception.UserNotFoundException
@@ -19,6 +21,8 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 @Service
 class PasswordResetService(
@@ -26,6 +30,7 @@ class PasswordResetService(
     private val userRepository: UserRepository,
     private val refreshTokenRepository: RefreshTokenRepository,
     private val passwordEncoder: PasswordEncoder,
+    private val eventPublisher: EventPublisher,
     @param:Value($$"${email.password-reset.expiry-minutes}") private val expiryMinutes: Long
 ) {
     @Transactional
@@ -36,7 +41,6 @@ class PasswordResetService(
         authTokenRepository.invalidatePasswordResetTokens(user)
 
         val expiryDate = Instant.now().plus(expiryMinutes, ChronoUnit.MINUTES)
-
         val token = AuthTokenEntity(
             token = SecureTokenGenerator.generate(),
             expiredAt = expiryDate,
@@ -44,7 +48,14 @@ class PasswordResetService(
             user = user
         )
 
-        // TODO: Send real email
+        eventPublisher.publish(
+            event = UserEvent.RequestResetPassword(
+                userId = user.userId,
+                email = user.email,
+                passwordResetToken = token.token,
+                expiresIn = expiryMinutes.toDuration(DurationUnit.MINUTES)
+            )
+        )
 
         return authTokenRepository.save(token).asPasswordResetToken()
     }

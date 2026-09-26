@@ -41,7 +41,7 @@ sealed class UserEvent : ChatEvent() {
     data class RequestResetPassword(
         val userId: UserId,
         val email: String,
-        val verificationToken: String,
+        val passwordResetToken: String,
         val expiresIn: Duration,
         override val key: String = REQUEST_RESET_PASSWORD_KEY,
     ) : UserEvent()
