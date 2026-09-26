@@ -28,7 +28,8 @@ class AuthService(
     private val eventPublisher: EventPublisher
 ) {
     /**
-     * Creates a user with an encoded password and a verification token, then publishes a creation event.
+     * Creates a user with an encoded password and a verification token, then attempts to publish a creation event.
+     * Event publishing failures are suppressed.
      *
      * @return the newly persisted user.
      * @throws UserAlreadyExistsException if [email] is already registered.
@@ -65,6 +66,13 @@ class AuthService(
         return saved.asExternalModel()
     }
 
+    /**
+     * Authenticates a verified user and returns their profile, access token, and refresh token.
+     * Persists a hash of the refresh token for subsequent refresh and logout requests.
+     *
+     * @throws InvalidCredentialsException if the email is unknown or the password does not match.
+     * @throws EmailNotVerifiedException if the password matches but the email is unverified.
+     */
     fun login(
         email: String,
         password: String,
@@ -92,6 +100,14 @@ class AuthService(
         )
     }
 
+    /**
+     * Returns the user and newly generated tokens after replacing the stored refresh-token hash.
+     * Requires a valid refresh JWT and a matching stored hash; stored expiration is not checked.
+     *
+     * @throws InvalidTokenException if JWT validation fails or the stored token is absent.
+     * @throws UserNotFoundException if the token's user no longer exists.
+     * @throws IllegalArgumentException if the token's subject cannot be parsed as a UUID.
+     */
     @Transactional
     fun refreshToken(refreshToken: String): AuthenticatedUser {
         if (!jwtService.validateRefreshToken(refreshToken)) {
@@ -121,6 +137,12 @@ class AuthService(
         )
     }
 
+    /**
+     * Deletes the matching stored refresh token, if present. Existing access tokens are not revoked.
+     *
+     * @throws InvalidTokenException if the JWT is not a valid refresh token.
+     * @throws IllegalArgumentException if the token's subject cannot be parsed as a UUID.
+     */
     @Transactional
     fun logout(refreshToken: String) {
         if (!jwtService.validateRefreshToken(refreshToken)) {
@@ -132,6 +154,11 @@ class AuthService(
         refreshTokenRepository.deleteByUserIdAndHashedToken(userId, hashToken)
     }
 
+    /**
+     * Persists the token's hash with a 30-day expiration measured from now.
+     *
+     * @throws IllegalArgumentException if [userId] cannot be parsed as a UUID.
+     */
     private fun saveRefreshToken(userId: UserId, refreshToken: String) {
         val hashedToken = hashToken(refreshToken)
         val expiryMillis = jwtService.refreshTokenValidityMs
@@ -146,6 +173,7 @@ class AuthService(
         refreshTokenRepository.save(entity)
     }
 
+    /** Returns the Base64-encoded SHA-256 digest of the token's UTF-8 bytes. */
     private fun hashToken(token: String): String {
         val digest = MessageDigest.getInstance("SHA-256")
         val hashedBytes = digest.digest(token.toByteArray())

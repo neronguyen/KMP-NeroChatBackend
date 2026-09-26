@@ -12,16 +12,20 @@ import java.time.Instant
 @Repository
 interface AuthTokenRepository : JpaRepository<AuthTokenEntity, String> {
 
+    /** Sets the usage timestamp on all of the user's verification tokens, including used or expired ones. */
     fun invalidateEmailVerificationTokens(user: UserEntity) {
         invalidateActiveTokens(user, AuthTokenType.EmailVerification)
     }
 
+    /** Sets the usage timestamp on all of the user's reset tokens, including used or expired ones. */
     fun invalidatePasswordResetTokens(user: UserEntity) {
         invalidateActiveTokens(user, AuthTokenType.PasswordReset)
     }
 
+    /** Deletes tokens with an expiration strictly before [now], regardless of type or usage. */
     fun deleteByExpiredAtBefore(now: Instant)
 
+    /** Sets the usage timestamp to database current time for every matching token, including used or expired ones. */
     @Modifying
     @Query(
         """

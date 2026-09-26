@@ -10,8 +10,14 @@ import java.util.*
 @Repository
 interface UserRepository : JpaRepository<UserEntity, UUID> {
 
+    /** Returns the user matching [email], or null when absent. */
     fun findByEmail(email: String): UserEntity?
 }
 
+/**
+ * Returns the user matching the UUID in [userId], or null when absent.
+ *
+ * @throws IllegalArgumentException if [userId] cannot be parsed as a UUID.
+ */
 fun UserRepository.findByUserId(userId: UserId): UserEntity? =
     findByIdOrNull(UUID.fromString(userId.value))

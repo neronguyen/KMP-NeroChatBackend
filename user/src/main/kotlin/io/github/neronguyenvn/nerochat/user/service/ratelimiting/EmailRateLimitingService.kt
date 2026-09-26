@@ -10,6 +10,16 @@ import java.util.concurrent.TimeUnit
 @Service
 class EmailRateLimitingService(private val redisson: RedissonClient) {
 
+    /**
+     * Runs [action] under a rate limit shared by the trimmed, lowercased email address.
+     * Successful actions set cooldowns of 60, 300, then 3,600 seconds; the attempt counter expires
+     * 24 hours after the last successful action. Action errors propagate without advancing the limit.
+     * Redis and lock errors also propagate.
+     *
+     * @throws RateLimitExceededException during an active cooldown, with remaining whole seconds.
+     * @throws RuntimeException if the lock cannot be acquired within five seconds.
+     * @throws InterruptedException if interrupted while waiting for the lock.
+     */
     operator fun invoke(
         email: String,
         action: () -> Unit

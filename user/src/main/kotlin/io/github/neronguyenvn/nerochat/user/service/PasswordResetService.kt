@@ -32,7 +32,8 @@ class PasswordResetService(
     @param:Value($$"${email.password-reset.expiry-minutes}") private val expiryMinutes: Long
 ) {
     /**
-     * Invalidates earlier password-reset tokens, saves a new expiring token, and publishes a reset request.
+     * Invalidates earlier password-reset tokens, saves a new expiring token, and attempts to publish a reset request.
+     * Event publishing failures are suppressed.
      *
      * @throws UserNotFoundException if no user is registered with [email].
      */
@@ -64,6 +65,13 @@ class PasswordResetService(
         )
     }
 
+    /**
+     * Replaces the user's encoded password, deletes all their refresh tokens, and consumes [token].
+     * The stored token type is not checked; existing access tokens are not revoked.
+     *
+     * @throws InvalidTokenException if the token is missing, used, or strictly past its expiration.
+     * @throws SamePasswordException if [newPassword] matches the stored password.
+     */
     @Transactional
     fun resetPassword(token: String, newPassword: String) {
         val existingToken = authTokenRepository.findByIdOrNull(token)
@@ -93,6 +101,15 @@ class PasswordResetService(
         authTokenRepository.save(existingToken)
     }
 
+    /**
+     * Checks the current password, saves the encoded replacement, and deletes all user refresh tokens.
+     * Existing access tokens are not revoked.
+     *
+     * @throws IllegalArgumentException if [userId] cannot be parsed as a UUID.
+     * @throws IllegalStateException if the user does not exist.
+     * @throws WrongPasswordException if [oldPassword] does not match the stored password.
+     * @throws SamePasswordException if [newPassword] equals [oldPassword].
+     */
     @Transactional
     fun changePassword(
         userId: UserId,

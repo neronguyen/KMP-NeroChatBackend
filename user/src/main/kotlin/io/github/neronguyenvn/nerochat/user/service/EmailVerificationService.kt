@@ -25,6 +25,13 @@ class EmailVerificationService(
     private val eventPublisher: EventPublisher,
     @param:Value($$"${email.verification.expiry-hours}") private val expiryHours: Long
 ) {
+    /**
+     * Marks the user's existing verification tokens as used and saves a new token with the
+     * configured lifetime in hours. This also applies to users whose email is already verified.
+     *
+     * @return the saved token and its user.
+     * @throws UserNotFoundException if no user is registered with [email].
+     */
     @Transactional
     fun createVerificationToken(email: String): AuthToken.EmailVerification {
         val user = userRepository.findByEmail(email)
@@ -47,6 +54,7 @@ class EmailVerificationService(
     /**
      * Replaces existing verification tokens and publishes a resend request for an unverified user.
      * A new token is also created for an already verified user, but no event is published.
+     * Event publishing failures are suppressed.
      *
      * @throws UserNotFoundException if no user is registered with [email].
      */
@@ -67,6 +75,11 @@ class EmailVerificationService(
         )
     }
 
+    /**
+     * Marks the stored token as used and its user's email as verified. The token type is not checked.
+     *
+     * @throws InvalidTokenException if the token is missing, used, or strictly past its expiration.
+     */
     @Transactional
     fun verifyEmail(token: String) {
         val existing = authTokenRepository.findByIdOrNull(token)

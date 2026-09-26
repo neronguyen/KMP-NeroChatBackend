@@ -12,7 +12,7 @@ class UserEventListener(
 
     /**
      * Dispatches registration, verification-resend, and password-reset events to the email service.
-     * Verified events require no email and are ignored.
+     * Verified events require no email and are ignored. Email-service errors propagate to the listener container.
      */
     @RabbitListener(queues = [UserEvent.QUEUE_NAME])
     fun handleUserEvent(event: UserEvent) {

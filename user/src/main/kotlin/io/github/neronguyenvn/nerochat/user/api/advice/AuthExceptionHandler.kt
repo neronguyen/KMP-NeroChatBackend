@@ -10,6 +10,12 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 @RestControllerAdvice
 class AuthExceptionHandler {
 
+    /**
+     * Returns a 400 response with all validation messages and the first as the summary.
+     * Missing messages become `Invalid value`.
+     *
+     * @throws NoSuchElementException if the binding result contains no errors.
+     */
     @ExceptionHandler(MethodArgumentNotValidException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     fun onMethodArgumentNotValid(e: MethodArgumentNotValidException): Map<String, Any> {
@@ -23,6 +29,7 @@ class AuthExceptionHandler {
         )
     }
 
+    /** Returns a 401 response with code `INVALID_TOKEN` and the exception message. */
     @ExceptionHandler(InvalidTokenException::class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     fun onInvalidToken(e: InvalidTokenException) = mapOf(
@@ -30,6 +37,7 @@ class AuthExceptionHandler {
         "message" to e.message
     )
 
+    /** Returns a 401 response with code `USER_NOT_FOUND` and the exception message. */
     @ExceptionHandler(UserNotFoundException::class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     fun onUserNotFound(e: UserNotFoundException) = mapOf(
@@ -37,6 +45,7 @@ class AuthExceptionHandler {
         "message" to e.message
     )
 
+    /** Returns a 401 response with code `WRONG_PASSWORD` and the exception message. */
     @ExceptionHandler(WrongPasswordException::class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     fun onPasswordMismatch(e: WrongPasswordException) = mapOf(
@@ -44,6 +53,7 @@ class AuthExceptionHandler {
         "message" to e.message
     )
 
+    /** Returns a 401 response with code `EMAIL_NOT_VERIFIED` and the exception message. */
     @ExceptionHandler(EmailNotVerifiedException::class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     fun onEmailNotVerified(e: EmailNotVerifiedException) = mapOf(
@@ -51,6 +61,7 @@ class AuthExceptionHandler {
         "message" to e.message
     )
 
+    /** Returns a 401 response with code `INVALID_CREDENTIALS` and the exception message. */
     @ExceptionHandler(InvalidCredentialsException::class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     fun onInvalidCredentials(e: InvalidCredentialsException) = mapOf(
@@ -58,6 +69,7 @@ class AuthExceptionHandler {
         "message" to e.message
     )
 
+    /** Returns a 409 response with code `SAME_PASSWORD` and the exception message. */
     @ExceptionHandler(SamePasswordException::class)
     @ResponseStatus(HttpStatus.CONFLICT)
     fun onSamePassword(e: SamePasswordException) = mapOf(
@@ -65,6 +77,7 @@ class AuthExceptionHandler {
         "message" to e.message
     )
 
+    /** Returns a 409 response with code `USER_ALREADY_EXISTS` and the exception message. */
     @ExceptionHandler(UserAlreadyExistsException::class)
     @ResponseStatus(HttpStatus.CONFLICT)
     fun onUserAlreadyExists(e: UserAlreadyExistsException) = mapOf(
@@ -72,6 +85,7 @@ class AuthExceptionHandler {
         "message" to e.message
     )
 
+    /** Returns a 429 response with code `RATE_LIMIT_EXCEEDED` and the exception message. */
     @ExceptionHandler(RateLimitExceededException::class)
     @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
     fun onRateLimitExceeded(e: RateLimitExceededException) = mapOf(

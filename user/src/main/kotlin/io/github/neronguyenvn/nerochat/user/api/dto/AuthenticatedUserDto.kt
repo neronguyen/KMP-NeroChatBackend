@@ -10,6 +10,7 @@ data class AuthenticatedUserDto(
     val refreshToken: String,
 )
 
+/** Maps the user profile and both tokens to the authentication response. */
 fun AuthenticatedUser.asDto(): AuthenticatedUserDto {
     return AuthenticatedUserDto(
         user = user.asDto(),

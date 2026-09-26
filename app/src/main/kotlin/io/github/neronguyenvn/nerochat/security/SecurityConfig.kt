@@ -12,6 +12,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 class SecurityConfig {
 
+    /**
+     * Configures stateless JWT authentication with a 401 entry point and disables CSRF, form login,
+     * and HTTP Basic. Auth endpoints are public except change-password; other API routes require
+     * an authenticated principal. Requests outside the API are permitted.
+     */
     @Bean
     fun securityFilterChain(
         http: HttpSecurity,

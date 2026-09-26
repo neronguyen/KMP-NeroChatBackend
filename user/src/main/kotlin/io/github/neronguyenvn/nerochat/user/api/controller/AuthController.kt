@@ -25,6 +25,10 @@ class AuthController(
     private val emailRateLimit: EmailRateLimitingService
 ) {
 
+    /**
+     * Creates a user and requests verification email delivery, returning the user response.
+     * Errors from [AuthService.register] propagate.
+     */
     @PostMapping("/register")
     @IpRateLimiting
     fun register(
@@ -37,6 +41,11 @@ class AuthController(
         ).asDto()
     }
 
+    /**
+     * Requests another verification email under the shared email rate limit.
+     * Unknown emails are treated as successful attempts and also advance the limit. Returns 204
+     * on success; other service and rate-limit errors propagate.
+     */
     @PostMapping("/resend-verification")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @IpRateLimiting
@@ -52,6 +61,10 @@ class AuthController(
         }
     }
 
+    /**
+     * Returns the verified user's profile and authentication tokens.
+     * Errors from [AuthService.login] propagate.
+     */
     @PostMapping("/login")
     @IpRateLimiting
     fun login(
@@ -63,6 +76,10 @@ class AuthController(
         ).asDto()
     }
 
+    /**
+     * Returns the user and replacement tokens for a stored refresh token.
+     * Errors from [AuthService.refreshToken] propagate.
+     */
     @PostMapping("/refresh-token")
     @IpRateLimiting
     fun refreshToken(
@@ -73,6 +90,10 @@ class AuthController(
         ).asDto()
     }
 
+    /**
+     * Removes the supplied refresh token from storage; existing access tokens are not revoked.
+     * Errors from [AuthService.logout] propagate.
+     */
     @PostMapping("/logout")
     fun logout(
         @Valid @RequestBody body: RefreshTokenRequest
@@ -80,6 +101,10 @@ class AuthController(
         userService.logout(refreshToken = body.refreshToken)
     }
 
+    /**
+     * Consumes the supplied token and marks its user's email as verified.
+     * Errors from [EmailVerificationService.verifyEmail] propagate.
+     */
     @GetMapping("/verify-email")
     fun verifyEmail(
         @RequestParam token: String
@@ -87,6 +112,10 @@ class AuthController(
         emailVerificationService.verifyEmail(token)
     }
 
+    /**
+     * Requests a password-reset email and returns 204, including for unknown email addresses.
+     * Other errors from [PasswordResetService.requestPasswordReset] propagate.
+     */
     @PostMapping("/forgot-password")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @IpRateLimiting
@@ -100,6 +129,10 @@ class AuthController(
         }
     }
 
+    /**
+     * Resets the password and consumes the supplied token, revoking the user's refresh tokens.
+     * Errors from [PasswordResetService.resetPassword] propagate.
+     */
     @PostMapping("/reset-password")
     fun resetPassword(
         @Valid @RequestBody body: ResetPasswordRequest
@@ -110,6 +143,10 @@ class AuthController(
         )
     }
 
+    /**
+     * Changes the authenticated user's password after checking the current password.
+     * Revokes their refresh tokens; errors from [PasswordResetService.changePassword] propagate.
+     */
     @PostMapping("/change-password")
     fun changePassword(
         @Valid @RequestBody body: ChangePasswordRequest,

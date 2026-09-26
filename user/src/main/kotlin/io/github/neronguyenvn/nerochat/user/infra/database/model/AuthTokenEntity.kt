@@ -32,11 +32,18 @@ class AuthTokenEntity(
     @CreationTimestamp
     var createdAt: Instant = Instant.now(),
 ) {
+    /** Returns whether a usage timestamp has been set. */
     fun isUsed() = usedAt != null
 
+    /** Returns true only when the current instant is strictly after the expiration. */
     fun isExpired() = Instant.now().isAfter(expiredAt)
 }
 
+/**
+ * Maps this entity to an email-verification token with its domain user.
+ *
+ * @throws IllegalStateException if the token type differs or the user has no assigned ID.
+ */
 fun AuthTokenEntity.asEmailVerificationToken(): AuthToken.EmailVerification {
     if (tokenType != AuthTokenType.EmailVerification) error("Invalid token type")
     return AuthToken.EmailVerification(
@@ -45,6 +52,11 @@ fun AuthTokenEntity.asEmailVerificationToken(): AuthToken.EmailVerification {
     )
 }
 
+/**
+ * Maps this entity to a password-reset token with its domain user.
+ *
+ * @throws IllegalStateException if the token type differs or the user has no assigned ID.
+ */
 fun AuthTokenEntity.asPasswordResetToken(): AuthToken.PasswordReset {
     if (tokenType != AuthTokenType.PasswordReset) error("Invalid token type")
     return AuthToken.PasswordReset(

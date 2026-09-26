@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder
 @Configuration
 class PasswordEncoderConfig {
 
+    /** Provides BCrypt hashing and verification with the encoder's default strength. */
     @Bean
     fun providesPasswordEncoder(): PasswordEncoder {
         return BCryptPasswordEncoder()

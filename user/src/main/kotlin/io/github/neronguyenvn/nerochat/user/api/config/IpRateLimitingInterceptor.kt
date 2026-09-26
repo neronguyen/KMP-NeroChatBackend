@@ -20,6 +20,12 @@ class IpRateLimitingInterceptor(
     private val applyLimit: Boolean
 ) : HandlerInterceptor {
 
+    /**
+     * Applies per-client, per-handler limits to annotated methods when limiting is enabled.
+     * Returns false after sending 429 for an exceeded limit; otherwise returns true.
+     * A client-IP security failure sends 403 but continues through rate limiting. Other resolver,
+     * rate-limit, and response errors propagate.
+     */
     override fun preHandle(
         request: HttpServletRequest,
         response: HttpServletResponse,

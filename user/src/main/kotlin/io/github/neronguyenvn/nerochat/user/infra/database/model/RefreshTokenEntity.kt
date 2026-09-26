@@ -33,6 +33,11 @@ class RefreshTokenEntity private constructor(
     @CreationTimestamp
     var createdAt: Instant = Instant.now(),
 ) {
+    /**
+     * Creates a stored refresh-token record from a domain user ID.
+     *
+     * @throws IllegalArgumentException if [userId] cannot be parsed as a UUID.
+     */
     constructor(
         userId: UserId,
         hashedToken: String,

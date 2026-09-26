@@ -26,6 +26,13 @@ class IpResolver(
             IpAddressMatcher(cidr)
         }
 
+    /**
+     * Returns a normalized X-Real-IP value only when the connection is from a trusted proxy.
+     * When proxy use is optional, falls back to the remote address for untrusted connections or
+     * invalid/missing headers. Private client addresses are accepted.
+     *
+     * @throws SecurityException when proxy use is required and the proxy or client header is invalid.
+     */
     fun getClientIp(request: HttpServletRequest): String {
         val remoteAddr = request.remoteAddr
         if (!isFromTrustedProxy(remoteAddr)) {
@@ -48,6 +55,7 @@ class IpResolver(
         return clientIp ?: remoteAddr
     }
 
+    /** Returns the normalized X-Real-IP header, or null when it is missing or invalid. */
     private fun extractRealIpFromNginx(
         request: HttpServletRequest,
         proxyIp: String
@@ -57,6 +65,10 @@ class IpResolver(
         }
     }
 
+    /**
+     * Trims and normalizes an IPv4 or IPv6 address, including private addresses.
+     * Returns null for blank or configured invalid values and for address parsing failures.
+     */
     private fun validateAndNormalizeIp(
         ip: String,
         proxyIp: String
@@ -91,10 +103,12 @@ class IpResolver(
         }
     }
 
+    /** Checks the configured private, loopback, and IPv6 link-local address ranges. */
     private fun isPrivateIp(ip: String): Boolean {
         return privateMatchers.any { it.matches(ip) }
     }
 
+    /** Returns whether [ip] matches any configured trusted proxy address or CIDR range. */
     private fun isFromTrustedProxy(ip: String): Boolean {
         return trustedMatchers.any { matcher ->
             matcher.matches(ip)

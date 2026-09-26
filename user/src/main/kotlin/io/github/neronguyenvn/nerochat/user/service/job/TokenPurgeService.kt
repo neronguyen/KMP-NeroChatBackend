@@ -10,6 +10,7 @@ import java.time.Instant
 class TokenPurgeService(
     private val authTokenRepository: AuthTokenRepository,
 ) {
+    /** Deletes verification and password-reset tokens whose expiration is strictly before now. */
     @Scheduled(cron = "0 0 3 * * *", zone = "Asia/Ho_Chi_Minh") // every day at 03:00 ICT (UTC+7)
     @Transactional
     fun purgeExpiredTokens() {

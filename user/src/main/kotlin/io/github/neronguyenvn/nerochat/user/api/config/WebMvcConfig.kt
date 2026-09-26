@@ -9,6 +9,7 @@ class WebMvcConfig(
     private val ipRateLimitingInterceptor: IpRateLimitingInterceptor
 ) : WebMvcConfigurer {
 
+    /** Registers IP rate limiting for API routes. */
     override fun addInterceptors(registry: InterceptorRegistry) {
         registry
             .addInterceptor(ipRateLimitingInterceptor)

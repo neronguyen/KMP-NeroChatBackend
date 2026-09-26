@@ -24,6 +24,7 @@ class EmailService(
     /**
      * Renders and sends a personalized verification email containing [token] in the verification URL.
      * [userId] identifies the user in logs; [email] is the delivery address.
+     * URL construction, template rendering, message preparation, and sending errors propagate.
      */
     fun sendVerificationEmail(
         userId: UserId,
@@ -57,6 +58,7 @@ class EmailService(
     /**
      * Renders and sends a personalized password-reset email containing [token] in the reset URL.
      * Displays [expiresIn] in whole minutes and uses [userId] for logging.
+     * URL construction, template rendering, message preparation, and sending errors propagate.
      */
     fun sendPasswordResetEmail(
         userId: UserId,
@@ -91,7 +93,7 @@ class EmailService(
 
     /**
      * Sends [html] as a UTF-8 HTML email from the configured sender to [to].
-     * [MailException] failures from sending are logged and suppressed; message preparation errors propagate.
+     * [MailException] failures from sending and message preparation errors propagate.
      */
     private fun sendHtmlEmail(
         to: String,

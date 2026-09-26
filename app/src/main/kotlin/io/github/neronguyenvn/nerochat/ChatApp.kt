@@ -8,6 +8,7 @@ import org.springframework.scheduling.annotation.EnableScheduling
 @EnableScheduling
 class ChatApp
 
+/** Starts the application with [args] passed to Spring Boot. */
 fun main(args: Array<String>) {
 	runApplication<ChatApp>(*args)
 }

@@ -13,6 +13,11 @@ import org.springframework.web.filter.OncePerRequestFilter
 @Component
 class JwtAuthenticationFilter(private val jwtService: JwtService) : OncePerRequestFilter() {
 
+    /**
+     * Sets the security principal from a valid access token, then continues the filter chain.
+     * Missing or rejected tokens leave the current authentication unchanged. [UserNotFoundException]
+     * is ignored; other errors from extracting the principal or the remaining filters propagate.
+     */
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
@@ -36,6 +41,7 @@ class JwtAuthenticationFilter(private val jwtService: JwtService) : OncePerReque
         filterChain.doFilter(request, response)
     }
 
+    /** Returns the Authorization header after an exact `Bearer ` prefix, or null if absent or unmatched. */
     private fun resolveToken(request: HttpServletRequest): String? {
         val bearerToken = request.getHeader(AUTHORIZATION_HEADER) ?: return null
         if (!bearerToken.startsWith(AUTHORIZATION_PREFIX)) return null

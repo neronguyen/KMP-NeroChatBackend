@@ -16,6 +16,10 @@ annotation class Password(
 )
 
 class PasswordValidator : ConstraintValidator<Password, String> {
+    /**
+     * Accepts nonblank passwords of at least 10 UTF-16 code units containing a Unicode letter
+     * and a Unicode digit. Null values are invalid.
+     */
     override fun isValid(value: String?, context: ConstraintValidatorContext?): Boolean {
         if (value.isNullOrBlank()) {
             return false
