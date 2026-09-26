@@ -46,6 +46,7 @@ fun UserEntity.asExternalModel(): User {
     return User(
         id = userId,
         email = email,
+        displayName = displayName,
         isEmailVerified = isEmailVerified
     )
 }
