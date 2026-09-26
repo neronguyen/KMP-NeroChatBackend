@@ -1,14 +1,14 @@
 package io.github.neronguyenvn.nerochat.user.service
 
+import io.github.neronguyenvn.nerochat.domain.event.UserEvent
 import io.github.neronguyenvn.nerochat.domain.type.UserId
+import io.github.neronguyenvn.nerochat.infra.messagequeue.EventPublisher
 import io.github.neronguyenvn.nerochat.user.domain.exception.InvalidTokenException
 import io.github.neronguyenvn.nerochat.user.domain.exception.SamePasswordException
 import io.github.neronguyenvn.nerochat.user.domain.exception.UserNotFoundException
 import io.github.neronguyenvn.nerochat.user.domain.exception.WrongPasswordException
-import io.github.neronguyenvn.nerochat.user.domain.model.AuthToken
 import io.github.neronguyenvn.nerochat.user.domain.model.AuthTokenType
 import io.github.neronguyenvn.nerochat.user.infra.database.model.AuthTokenEntity
-import io.github.neronguyenvn.nerochat.user.infra.database.model.asPasswordResetToken
 import io.github.neronguyenvn.nerochat.user.infra.database.model.userId
 import io.github.neronguyenvn.nerochat.user.infra.database.repository.*
 import io.github.neronguyenvn.nerochat.user.infra.security.SecureTokenGenerator
@@ -19,6 +19,8 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 @Service
 class PasswordResetService(
@@ -26,27 +28,40 @@ class PasswordResetService(
     private val userRepository: UserRepository,
     private val refreshTokenRepository: RefreshTokenRepository,
     private val passwordEncoder: PasswordEncoder,
+    private val eventPublisher: EventPublisher,
     @param:Value($$"${email.password-reset.expiry-minutes}") private val expiryMinutes: Long
 ) {
+    /**
+     * Invalidates earlier password-reset tokens, saves a new expiring token, and publishes a reset request.
+     *
+     * @throws UserNotFoundException if no user is registered with [email].
+     */
     @Transactional
-    fun requestPasswordReset(email: String): AuthToken.PasswordReset {
+    fun requestPasswordReset(email: String){
         val user = userRepository.findByEmail(email)
             ?: throw UserNotFoundException()
 
         authTokenRepository.invalidatePasswordResetTokens(user)
 
         val expiryDate = Instant.now().plus(expiryMinutes, ChronoUnit.MINUTES)
-
+        // TODO: Simplify token param
         val token = AuthTokenEntity(
             token = SecureTokenGenerator.generate(),
             expiredAt = expiryDate,
             tokenType = AuthTokenType.PasswordReset,
             user = user
         )
+        authTokenRepository.save(token)
 
-        // TODO: Send real email
-
-        return authTokenRepository.save(token).asPasswordResetToken()
+        eventPublisher.publish(
+            event = UserEvent.RequestResetPassword(
+                userId = user.userId,
+                email = user.email,
+                displayName = user.displayName,
+                passwordResetToken = token.token,
+                expiresIn = expiryMinutes.toDuration(DurationUnit.MINUTES)
+            )
+        )
     }
 
     @Transactional

@@ -7,13 +7,16 @@ import kotlinx.serialization.Serializable
 data class UserDto(
     val id: String,
     val email: String,
+    val displayName: String,
     val isEmailVerified: Boolean,
 )
 
+/** Maps this user to an API response, including the display name and email-verification status. */
 fun User.asDto(): UserDto {
     return UserDto(
         id = id.value,
         email = email,
+        displayName = displayName,
         isEmailVerified = isEmailVerified
     )
 }

@@ -42,10 +42,16 @@ class UserEntity(
 val UserEntity.userId: UserId
     get() = UserId((id ?: error("User ID cannot be null")).toString())
 
+/**
+ * Maps this persisted entity to a domain user, excluding password and persistence metadata.
+ *
+ * @throws IllegalStateException if the entity has no assigned ID.
+ */
 fun UserEntity.asExternalModel(): User {
     return User(
         id = userId,
         email = email,
+        displayName = displayName,
         isEmailVerified = isEmailVerified
     )
 }

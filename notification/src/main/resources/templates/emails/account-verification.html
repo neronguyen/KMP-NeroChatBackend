@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+<h1>Welcome to Nero Chat, <span th:text="${displayName}">there</span>!</h1>
+<p>Verify your email address to finish setting up your account:</p>
+<p><a th:href="${verificationUrl}">Verify email address</a></p>
+<p>This link expires in 24 hours.</p>
+<p>If you didn't create a Nero Chat account, you can ignore this email.</p>
+</body>
+</html>

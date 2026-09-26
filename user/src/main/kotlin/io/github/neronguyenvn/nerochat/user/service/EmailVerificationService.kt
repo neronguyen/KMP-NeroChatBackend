@@ -1,5 +1,7 @@
 package io.github.neronguyenvn.nerochat.user.service
 
+import io.github.neronguyenvn.nerochat.domain.event.UserEvent
+import io.github.neronguyenvn.nerochat.infra.messagequeue.EventPublisher
 import io.github.neronguyenvn.nerochat.user.domain.exception.InvalidTokenException
 import io.github.neronguyenvn.nerochat.user.domain.exception.UserNotFoundException
 import io.github.neronguyenvn.nerochat.user.domain.model.AuthToken
@@ -20,6 +22,7 @@ import java.time.temporal.ChronoUnit
 class EmailVerificationService(
     private val authTokenRepository: AuthTokenRepository,
     private val userRepository: UserRepository,
+    private val eventPublisher: EventPublisher,
     @param:Value($$"${email.verification.expiry-hours}") private val expiryHours: Long
 ) {
     @Transactional
@@ -41,8 +44,27 @@ class EmailVerificationService(
         return authTokenRepository.save(token).asEmailVerificationToken()
     }
 
+    /**
+     * Replaces existing verification tokens and publishes a resend request for an unverified user.
+     * A new token is also created for an already verified user, but no event is published.
+     *
+     * @throws UserNotFoundException if no user is registered with [email].
+     */
+    @Transactional
     fun resendVerificationEmail(email: String) {
-        // TODO: Trigger resend
+        val token = createVerificationToken(email)
+        if (token.user.isEmailVerified) {
+            return
+        }
+
+        eventPublisher.publish(
+            event = UserEvent.RequestResendVerification(
+                userId = token.user.id,
+                email = email,
+                displayName = token.user.displayName,
+                verificationToken = token.token
+            )
+        )
     }
 
     @Transactional

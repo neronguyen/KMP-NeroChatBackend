@@ -1,6 +1,8 @@
 package io.github.neronguyenvn.nerochat.user.service
 
+import io.github.neronguyenvn.nerochat.domain.event.UserEvent
 import io.github.neronguyenvn.nerochat.domain.type.UserId
+import io.github.neronguyenvn.nerochat.infra.messagequeue.EventPublisher
 import io.github.neronguyenvn.nerochat.user.domain.exception.*
 import io.github.neronguyenvn.nerochat.user.domain.model.AuthenticatedUser
 import io.github.neronguyenvn.nerochat.user.domain.model.User
@@ -23,7 +25,14 @@ class AuthService(
     private val emailVerificationService: EmailVerificationService,
     private val passwordEncoder: PasswordEncoder,
     private val jwtService: JwtService,
+    private val eventPublisher: EventPublisher
 ) {
+    /**
+     * Creates a user with an encoded password and a verification token, then publishes a creation event.
+     *
+     * @return the newly persisted user.
+     * @throws UserAlreadyExistsException if [email] is already registered.
+     */
     @Transactional
     fun register(
         email: String,
@@ -43,7 +52,16 @@ class AuthService(
             )
         )
 
-        emailVerificationService.createVerificationToken(email)
+        val token = emailVerificationService.createVerificationToken(email)
+        eventPublisher.publish(
+            event = UserEvent.Created(
+                userId = saved.userId,
+                email = email,
+                displayName = displayName,
+                verificationToken = token.token
+            )
+        )
+
         return saved.asExternalModel()
     }
 
