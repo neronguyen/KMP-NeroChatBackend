@@ -15,6 +15,7 @@ class EventPublisher(
      * Sends [event] to its exchange using its routing key.
      * Publishing failures are logged and are not propagated to the caller.
      */
+    // TODO: handle event with transactional concerns
     fun <T: ChatEvent> publish(event: T) {
         try {
             rabbitTemplate.convertAndSend(
