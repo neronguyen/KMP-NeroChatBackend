@@ -110,6 +110,7 @@ class EmailService(
             javaMailSender.send(message)
         } catch (e: MailException) {
             logger.error("Could not send email", e)
+            throw e
         }
     }
 }
