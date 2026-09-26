@@ -72,7 +72,6 @@ jwt:
 
 email:
   from: ${SMTP_SENDER}
-  url: "http://localhost:8080"
   verification:
     expiry-hours: 24
   password-reset:

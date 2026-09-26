@@ -10,6 +10,9 @@ spring:
 jwt:
   expiration-minutes: 15
 
+email:
+  url: ${DEPLOY_URL}
+
 nginx:
   require-proxy: true
 
