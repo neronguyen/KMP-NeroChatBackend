@@ -105,6 +105,7 @@ class AuthController(
      * Consumes the supplied token and marks its user's email as verified.
      * Errors from [EmailVerificationService.verifyEmail] propagate.
      */
+    // TODO: Keep authentication tokens out of request URLs.
     @GetMapping("/verify-email")
     fun verifyEmail(
         @RequestParam token: String

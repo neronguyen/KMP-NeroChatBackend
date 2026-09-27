@@ -26,6 +26,7 @@ class EmailService(
      * [userId] identifies the user in logs; [email] is the delivery address.
      * URL construction, template rendering, message preparation, and sending errors propagate.
      */
+    // TODO: Keep authentication tokens out of request URLs.
     fun sendVerificationEmail(
         userId: UserId,
         email: String,
@@ -60,6 +61,7 @@ class EmailService(
      * Displays [expiresIn] in whole minutes and uses [userId] for logging.
      * URL construction, template rendering, message preparation, and sending errors propagate.
      */
+    // TODO: Keep authentication tokens out of request URLs.
     fun sendPasswordResetEmail(
         userId: UserId,
         email: String,
