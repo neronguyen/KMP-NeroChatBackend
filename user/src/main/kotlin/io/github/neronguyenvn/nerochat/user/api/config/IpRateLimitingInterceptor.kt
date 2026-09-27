@@ -40,6 +40,7 @@ class IpRateLimitingInterceptor(
                 ipResolver.getClientIp(request)
             } catch (_: SecurityException) {
                 response.sendError(HttpStatus.FORBIDDEN.value())
+                return false
             }
 
             val methodKey = "${handler.beanType.simpleName}:${handler.method.name}"
