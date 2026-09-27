@@ -23,6 +23,11 @@ spring:
         socketTimeout: 30
         connectTimeout: 10
 
+  data:
+    redis:
+      repositories:
+        enabled: false
+
   redis:
     redisson:
       config: |
