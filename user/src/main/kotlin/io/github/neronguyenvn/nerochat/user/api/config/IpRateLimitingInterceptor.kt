@@ -22,9 +22,8 @@ class IpRateLimitingInterceptor(
 
     /**
      * Applies per-client, per-handler limits to annotated methods when limiting is enabled.
-     * Returns false after sending 429 for an exceeded limit; otherwise returns true.
-     * A client-IP security failure sends 403 but continues through rate limiting. Other resolver,
-     * rate-limit, and response errors propagate.
+     * Returns false after sending 403 for a client-IP security failure or 429 for an exceeded limit.
+     * Allowed requests continue; other resolver, rate-limit, and response errors propagate.
      */
     override fun preHandle(
         request: HttpServletRequest,
