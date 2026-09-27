@@ -33,11 +33,12 @@ spring:
       config: |
         singleServerConfig:
           address: "redis://${REDIS_HOST}:${REDIS_PORT}"
-          password: "${REDIS_PASSWORD}"
           connectionMinimumIdleSize: 2    
           connectionPoolSize: 5         
           connectTimeout: 10000
           timeout: 3000
+        
+        password: "${REDIS_PASSWORD}"
 
   jpa:
     open-in-view: false
