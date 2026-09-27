@@ -77,14 +77,18 @@ class EmailVerificationService(
     }
 
     /**
-     * Marks the stored token as used and its user's email as verified. The token type is not checked.
+     * Marks a verification token as used and its user's email as verified.
      *
-     * @throws InvalidTokenException if the token is missing, used, or strictly past its expiration.
+     * @throws InvalidTokenException if the token is missing, has the wrong type, is used, or is expired.
      */
     @Transactional
     fun verifyEmail(token: String) {
         val existing = authTokenRepository.findByIdOrNull(token)
             ?: throw InvalidTokenException("Email verification token is invalid")
+
+        if (existing.tokenType != AuthTokenType.EmailVerification) {
+            throw InvalidTokenException("Email verification token is invalid")
+        }
 
         if (existing.isUsed()) {
             throw InvalidTokenException("Email verification token is already used")

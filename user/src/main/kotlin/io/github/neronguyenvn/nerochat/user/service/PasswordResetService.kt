@@ -68,15 +68,19 @@ class PasswordResetService(
 
     /**
      * Replaces the user's encoded password, deletes all their refresh tokens, and consumes [token].
-     * The stored token type is not checked; existing access tokens are not revoked.
+     * Existing access tokens are not revoked.
      *
-     * @throws InvalidTokenException if the token is missing, used, or strictly past its expiration.
+     * @throws InvalidTokenException if the token is missing, has the wrong type, is used, or is expired.
      * @throws SamePasswordException if [newPassword] matches the stored password.
      */
     @Transactional
     fun resetPassword(token: String, newPassword: String) {
         val existingToken = authTokenRepository.findByIdOrNull(token)
             ?: throw InvalidTokenException("Password reset token is invalid")
+
+        if (existingToken.tokenType != AuthTokenType.PasswordReset) {
+            throw InvalidTokenException("Password reset token is invalid")
+        }
 
         if (existingToken.isUsed()) {
             throw InvalidTokenException("Password reset token is already used")
