@@ -13,7 +13,7 @@ configure<KotlinJvmProjectExtension> {
 
 dependencies {
     implementation(platform(libs.spring.boot.dependencies))
-    implementation(libs.spring.boot.kotlin.serialization)
+    implementation(libs.spring.boot.starter.kotlinx.serialization.json)
     implementation(libs.spring.boot.starter.data.jpa)
     implementation(libs.spring.boot.starter.redission)
     implementation(libs.spring.boot.starter.validation)
