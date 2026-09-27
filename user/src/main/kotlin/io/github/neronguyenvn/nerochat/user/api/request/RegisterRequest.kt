@@ -8,7 +8,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class RegisterRequest(
 
-    @field:Email(message = "Email must be a valid email address")
+    @field:NotBlank
+    @field:Email
     val email: String,
 
     @field:NotBlank
