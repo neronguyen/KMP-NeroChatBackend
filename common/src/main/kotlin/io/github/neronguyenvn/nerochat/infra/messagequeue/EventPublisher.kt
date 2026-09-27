@@ -13,7 +13,7 @@ class EventPublisher(
 
     /**
      * Sends [event] to its exchange using its routing key.
-     * Publishing failures are logged and are not propagated to the caller.
+     * Publishing failures are logged and propagated to the caller.
      */
     // TODO: handle event with transactional concerns
     fun <T: ChatEvent> publish(event: T) {
@@ -26,6 +26,7 @@ class EventPublisher(
             logger.info("Successfully published event: ${event.key}")
         } catch(e: Exception) {
             logger.error("Failed to publish ${event.key} event", e)
+            throw e
         }
     }
 }
