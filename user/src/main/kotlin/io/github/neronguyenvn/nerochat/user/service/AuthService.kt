@@ -11,7 +11,10 @@ import io.github.neronguyenvn.nerochat.user.infra.database.model.RefreshTokenEnt
 import io.github.neronguyenvn.nerochat.user.infra.database.model.UserEntity
 import io.github.neronguyenvn.nerochat.user.infra.database.model.asExternalModel
 import io.github.neronguyenvn.nerochat.user.infra.database.model.userId
-import io.github.neronguyenvn.nerochat.user.infra.database.repository.*
+import io.github.neronguyenvn.nerochat.user.infra.database.repository.RefreshTokenRepository
+import io.github.neronguyenvn.nerochat.user.infra.database.repository.UserRepository
+import io.github.neronguyenvn.nerochat.user.infra.database.repository.deleteByUserIdAndHashedToken
+import io.github.neronguyenvn.nerochat.user.infra.database.repository.findByUserId
 import jakarta.transaction.Transactional
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -122,10 +125,10 @@ class AuthService(
         val user = userRepository.findByUserId(userId)
             ?: throw UserNotFoundException()
 
-        refreshTokenRepository.findByUserIdAndHashedToken(userId, hashedToken)
-            ?: throw InvalidTokenException("Invalid refresh token")
-
-        refreshTokenRepository.deleteByUserIdAndHashedToken(userId, hashedToken)
+        val deleted = refreshTokenRepository.deleteByUserIdAndHashedToken(userId, hashedToken)
+        if (deleted == 0L) {
+            throw InvalidTokenException("Invalid refresh token")
+        }
 
         val newAccessToken = jwtService.generateAccessToken(userId)
         val newRefreshToken = jwtService.generateRefreshToken(userId)
