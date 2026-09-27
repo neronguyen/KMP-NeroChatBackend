@@ -123,10 +123,12 @@ class AuthController(
     fun forgotPassword(
         @Valid @RequestBody body: EmailRequest
     ) {
-        try {
-            passwordResetService.requestPasswordReset(body.email)
-        } catch (_: UserNotFoundException) {
-            // Intentionally swallowed — never reveal whether the email is registered
+        emailRateLimit(body.email) {
+            try {
+                passwordResetService.requestPasswordReset(body.email)
+            } catch (_: UserNotFoundException) {
+                // Intentionally swallowed — never reveal whether the email is registered
+            }
         }
     }
 
