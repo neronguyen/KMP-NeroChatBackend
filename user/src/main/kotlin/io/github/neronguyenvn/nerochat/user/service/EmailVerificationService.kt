@@ -55,7 +55,7 @@ class EmailVerificationService(
     /**
      * Replaces existing verification tokens and publishes a resend request for an unverified user.
      * A new token is also created for an already verified user, but no event is published.
-     * Event publishing failures are suppressed.
+     * Synchronous event-publishing failures propagate to the caller.
      *
      * @throws UserNotFoundException if no user is registered with [email].
      */

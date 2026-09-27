@@ -33,7 +33,7 @@ class AuthService(
 ) {
     /**
      * Creates a user with an encoded password and a verification token, then attempts to publish a creation event.
-     * Event publishing failures are suppressed.
+     * Synchronous event-publishing failures propagate to the caller.
      *
      * @return the newly persisted user.
      * @throws UserAlreadyExistsException if [email] is already registered.

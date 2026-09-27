@@ -34,7 +34,7 @@ class PasswordResetService(
 ) {
     /**
      * Invalidates earlier password-reset tokens, saves a new expiring token, and attempts to publish a reset request.
-     * Event publishing failures are suppressed.
+     * Synchronous event-publishing failures propagate to the caller.
      *
      * @throws UserNotFoundException if no user is registered with [email].
      */
