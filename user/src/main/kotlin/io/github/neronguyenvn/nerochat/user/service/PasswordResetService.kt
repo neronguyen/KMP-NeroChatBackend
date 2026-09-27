@@ -8,6 +8,7 @@ import io.github.neronguyenvn.nerochat.user.domain.exception.SamePasswordExcepti
 import io.github.neronguyenvn.nerochat.user.domain.exception.UserNotFoundException
 import io.github.neronguyenvn.nerochat.user.domain.exception.WrongPasswordException
 import io.github.neronguyenvn.nerochat.user.domain.model.AuthTokenType
+import io.github.neronguyenvn.nerochat.user.domain.util.normalizeEmail
 import io.github.neronguyenvn.nerochat.user.infra.database.model.AuthTokenEntity
 import io.github.neronguyenvn.nerochat.user.infra.database.model.userId
 import io.github.neronguyenvn.nerochat.user.infra.database.repository.*
@@ -39,7 +40,7 @@ class PasswordResetService(
      */
     @Transactional
     fun requestPasswordReset(email: String){
-        val user = userRepository.findByEmail(email)
+        val user = userRepository.findByEmail(normalizeEmail(email))
             ?: throw UserNotFoundException()
 
         authTokenRepository.invalidatePasswordResetTokens(user)

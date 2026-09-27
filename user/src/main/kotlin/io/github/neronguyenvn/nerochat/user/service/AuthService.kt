@@ -6,6 +6,7 @@ import io.github.neronguyenvn.nerochat.infra.messagequeue.EventPublisher
 import io.github.neronguyenvn.nerochat.user.domain.exception.*
 import io.github.neronguyenvn.nerochat.user.domain.model.AuthenticatedUser
 import io.github.neronguyenvn.nerochat.user.domain.model.User
+import io.github.neronguyenvn.nerochat.user.domain.util.normalizeEmail
 import io.github.neronguyenvn.nerochat.user.infra.database.model.RefreshTokenEntity
 import io.github.neronguyenvn.nerochat.user.infra.database.model.UserEntity
 import io.github.neronguyenvn.nerochat.user.infra.database.model.asExternalModel
@@ -40,24 +41,25 @@ class AuthService(
         displayName: String,
         password: String,
     ): User {
-        val existing = userRepository.findByEmail(email)
+        val normalizedEmail = normalizeEmail(email)
+        val existing = userRepository.findByEmail(normalizedEmail)
         if (existing != null) {
             throw UserAlreadyExistsException()
         }
 
         val saved = userRepository.saveAndFlush(
             UserEntity(
-                email = email,
+                email = normalizedEmail,
                 displayName = displayName,
                 hashedPassword = passwordEncoder.encode(password)!!,
             )
         )
 
-        val token = emailVerificationService.createVerificationToken(email)
+        val token = emailVerificationService.createVerificationToken(normalizedEmail)
         eventPublisher.publish(
             event = UserEvent.Created(
                 userId = saved.userId,
-                email = email,
+                email = saved.email,
                 displayName = displayName,
                 verificationToken = token.token
             )
@@ -77,7 +79,7 @@ class AuthService(
         email: String,
         password: String,
     ): AuthenticatedUser {
-        val existing = userRepository.findByEmail(email) ?: throw InvalidCredentialsException()
+        val existing = userRepository.findByEmail(normalizeEmail(email)) ?: throw InvalidCredentialsException()
 
         val matches = passwordEncoder.matches(
             password,

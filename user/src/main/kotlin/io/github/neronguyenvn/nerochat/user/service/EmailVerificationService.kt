@@ -6,6 +6,7 @@ import io.github.neronguyenvn.nerochat.user.domain.exception.InvalidTokenExcepti
 import io.github.neronguyenvn.nerochat.user.domain.exception.UserNotFoundException
 import io.github.neronguyenvn.nerochat.user.domain.model.AuthToken
 import io.github.neronguyenvn.nerochat.user.domain.model.AuthTokenType
+import io.github.neronguyenvn.nerochat.user.domain.util.normalizeEmail
 import io.github.neronguyenvn.nerochat.user.infra.database.model.AuthTokenEntity
 import io.github.neronguyenvn.nerochat.user.infra.database.model.asEmailVerificationToken
 import io.github.neronguyenvn.nerochat.user.infra.database.repository.AuthTokenRepository
@@ -34,7 +35,7 @@ class EmailVerificationService(
      */
     @Transactional
     fun createVerificationToken(email: String): AuthToken.EmailVerification {
-        val user = userRepository.findByEmail(email)
+        val user = userRepository.findByEmail(normalizeEmail(email))
             ?: throw UserNotFoundException()
 
         authTokenRepository.invalidateEmailVerificationTokens(user)
@@ -68,7 +69,7 @@ class EmailVerificationService(
         eventPublisher.publish(
             event = UserEvent.RequestResendVerification(
                 userId = token.user.id,
-                email = email,
+                email = token.user.email,
                 displayName = token.user.displayName,
                 verificationToken = token.token
             )
