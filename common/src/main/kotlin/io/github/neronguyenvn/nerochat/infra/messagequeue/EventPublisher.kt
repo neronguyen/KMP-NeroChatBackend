@@ -16,6 +16,7 @@ class EventPublisher(
      * Publishing failures are logged and propagated to the caller.
      */
     // TODO: handle event with transactional concerns
+    // TODO: handle publish confirmation type and return
     fun <T: ChatEvent> publish(event: T) {
         try {
             rabbitTemplate.convertAndSend(
