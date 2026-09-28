@@ -3,5 +3,5 @@ plugins {
 }
 
 dependencies {
-    testImplementation(kotlin("test"))
+    implementation(projects.common)
 }
