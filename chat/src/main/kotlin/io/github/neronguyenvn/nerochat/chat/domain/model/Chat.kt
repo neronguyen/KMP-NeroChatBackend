@@ -7,9 +7,9 @@ import kotlin.time.Instant
 @OptIn(ExperimentalTime::class)
 data class Chat(
     val id: ChatId,
-    val participants: Set<ChatParticipant>,
-    val lastMessage: ChatMessage?,
     val creator: ChatParticipant,
+    val participants: Set<ChatParticipant>,
+    val lastMessage: ChatMessage,
     val lastActivityAt: Instant,
     val createdAt: Instant
 )

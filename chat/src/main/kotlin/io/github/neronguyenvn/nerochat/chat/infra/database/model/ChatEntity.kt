@@ -1,9 +1,14 @@
 package io.github.neronguyenvn.nerochat.chat.infra.database.model
 
+import io.github.neronguyenvn.nerochat.chat.domain.model.Chat
+import io.github.neronguyenvn.nerochat.chat.domain.model.ChatMessage
+import io.github.neronguyenvn.nerochat.domain.type.ChatId
 import jakarta.persistence.*
 import org.hibernate.annotations.CreationTimestamp
 import java.time.Instant
 import java.util.*
+import kotlin.time.ExperimentalTime
+import kotlin.time.toKotlinInstant
 
 @Entity
 @Table(
@@ -46,4 +51,14 @@ class ChatEntity(
 
     @CreationTimestamp
     var createdAt: Instant = Instant.now(),
+)
+
+@OptIn(ExperimentalTime::class)
+fun ChatEntity.asExternalModel(lastMessage: ChatMessage) = Chat(
+    id = ChatId(id?.toString() ?: error("ChatId have to be generated")),
+    creator = creator.asExternalModel(),
+    participants = participants.map { it.asExternalModel() }.toSet(),
+    lastMessage = lastMessage,
+    lastActivityAt = lastMessage.createdAt,
+    createdAt = createdAt.toKotlinInstant()
 )

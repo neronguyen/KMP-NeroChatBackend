@@ -1,5 +1,7 @@
 package io.github.neronguyenvn.nerochat.chat.infra.database.model
 
+import io.github.neronguyenvn.nerochat.chat.domain.model.ChatParticipant
+import io.github.neronguyenvn.nerochat.domain.type.UserId
 import jakarta.persistence.*
 import org.hibernate.annotations.CreationTimestamp
 import java.time.Instant
@@ -28,4 +30,11 @@ class ChatParticipantEntity(
 
     @CreationTimestamp
     var createdAt: Instant = Instant.now()
+)
+
+fun ChatParticipantEntity.asExternalModel() = ChatParticipant(
+    userId = UserId(userId.toString()),
+    email = email,
+    displayName = displayName,
+    profilePictureUrl = profilePictureUrl,
 )
