@@ -1,6 +1,6 @@
 package io.github.neronguyenvn.nerochat.infra.messagequeue
 
-import io.github.neronguyenvn.nerochat.domain.event.ChatEvent
+import io.github.neronguyenvn.nerochat.domain.event.Event
 import kotlinx.serialization.json.Json
 import org.springframework.amqp.core.Message
 import org.springframework.amqp.core.MessageProperties
@@ -11,16 +11,16 @@ class KotlinSerializationJsonAmqpMessageConverter(
 ) : MessageConverter {
 
     /**
-     * Encodes a [ChatEvent] as UTF-8 JSON, retaining the supplied [messageProperties].
+     * Encodes a [Event] as UTF-8 JSON, retaining the supplied [messageProperties].
      *
-     * @throws IllegalStateException if the object is not a [ChatEvent].
+     * @throws IllegalStateException if the object is not a [Event].
      */
     override fun toMessage(
         `object`: Any,
         messageProperties: MessageProperties
     ): Message {
         val body = when (`object`) {
-            is ChatEvent -> json.encodeToString(`object`)
+            is Event -> json.encodeToString(`object`)
             else -> error("Unsupported message type: ${`object`::class}")
         }
 
@@ -31,11 +31,11 @@ class KotlinSerializationJsonAmqpMessageConverter(
     }
 
     /**
-     * Decodes the UTF-8 JSON body of [message] into a [ChatEvent].
+     * Decodes the UTF-8 JSON body of [message] into a [Event].
      * Deserialization failures are propagated to the caller.
      */
     override fun fromMessage(message: Message): Any {
-        return json.decodeFromString<ChatEvent>(
+        return json.decodeFromString<Event>(
             message.body.decodeToString()
         )
     }

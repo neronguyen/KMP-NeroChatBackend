@@ -8,7 +8,7 @@ import kotlin.time.Instant
 
 @OptIn(ExperimentalTime::class)
 @Serializable
-sealed class ChatEvent {
+sealed class Event {
     abstract val key: String
     abstract val exchangeName: String
     open val id: String = UUID.randomUUID().toString()

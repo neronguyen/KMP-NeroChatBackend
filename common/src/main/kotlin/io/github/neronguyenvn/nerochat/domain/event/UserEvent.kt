@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 import kotlin.time.Duration
 
 @Serializable
-sealed class UserEvent : ChatEvent() {
+sealed class UserEvent : Event() {
 
     override val exchangeName: String = EXCHANGE_NAME
 
