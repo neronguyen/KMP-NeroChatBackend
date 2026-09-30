@@ -20,9 +20,9 @@ class ChatService(
 
     @Transactional
     fun createChat(
-        messageContent: String,
         creatorId: UserId,
-        otherUserIds: Set<UserId>
+        otherUserIds: Set<UserId>,
+        messageContent: String,
     ): Chat {
         val otherParticipants = chatParticipantRepository.findByUserIdIn(
             userIds = otherUserIds

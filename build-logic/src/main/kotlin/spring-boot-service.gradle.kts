@@ -18,6 +18,7 @@ dependencies {
     implementation(libs.spring.boot.starter.redission)
     implementation(libs.spring.boot.starter.validation)
     implementation(libs.spring.boot.starter.web)
+    implementation(libs.spring.boot.starter.security)
 }
 
 tasks.withType<Test> {
