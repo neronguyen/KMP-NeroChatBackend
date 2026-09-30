@@ -32,7 +32,7 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 
 # Redisson
-spring-boot-starter-redission = { module = "org.redisson:redisson-spring-boot-starter", version.ref = "redission" }
+redisson-spring-boot-starter = { module = "org.redisson:redisson-spring-boot-starter", version.ref = "redission" }
 
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }

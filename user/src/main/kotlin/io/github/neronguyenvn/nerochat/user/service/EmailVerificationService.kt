@@ -1,7 +1,7 @@
 package io.github.neronguyenvn.nerochat.user.service
 
-import io.github.neronguyenvn.nerochat.domain.util.normalizeEmail
 import io.github.neronguyenvn.nerochat.domain.event.UserEvent
+import io.github.neronguyenvn.nerochat.domain.util.normalizeEmail
 import io.github.neronguyenvn.nerochat.infra.messagequeue.EventPublisher
 import io.github.neronguyenvn.nerochat.user.domain.exception.InvalidTokenException
 import io.github.neronguyenvn.nerochat.user.domain.exception.UserNotFoundException
@@ -9,6 +9,7 @@ import io.github.neronguyenvn.nerochat.user.domain.model.AuthToken
 import io.github.neronguyenvn.nerochat.user.domain.model.AuthTokenType
 import io.github.neronguyenvn.nerochat.user.infra.database.model.AuthTokenEntity
 import io.github.neronguyenvn.nerochat.user.infra.database.model.asEmailVerificationToken
+import io.github.neronguyenvn.nerochat.user.infra.database.model.userId
 import io.github.neronguyenvn.nerochat.user.infra.database.repository.AuthTokenRepository
 import io.github.neronguyenvn.nerochat.user.infra.database.repository.UserRepository
 import io.github.neronguyenvn.nerochat.user.infra.security.SecureTokenGenerator
@@ -105,5 +106,13 @@ class EmailVerificationService(
 
         authTokenRepository.save(existing)
         userRepository.save(user)
+
+        eventPublisher.publish(
+            UserEvent.Verified(
+                userId = user.userId,
+                email = user.email,
+                displayName = user.displayName
+            )
+        )
     }
 }

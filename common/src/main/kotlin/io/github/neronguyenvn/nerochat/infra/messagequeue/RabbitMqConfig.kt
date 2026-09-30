@@ -47,12 +47,29 @@ class RabbitMqConfig {
 
     /** Routes events matching [UserEvent.ROUTING_KEY_PATTERN] from the exchange to the queue. */
     @Bean
-    fun bindingUserEvents(
-        queueNotificationServiceForUserEvents: Queue,
+    fun bindingNotificationServiceForUserEvents(
         exchangeUserEvents: TopicExchange,
+        queueNotificationServiceForUserEvents: Queue,
     ): Binding {
         return BindingBuilder
             .bind(queueNotificationServiceForUserEvents)
+            .to(exchangeUserEvents)
+            .with(UserEvent.ROUTING_KEY_PATTERN)
+    }
+
+    @Bean
+    fun queueChatServiceForUserEvent() = Queue(
+        MessageQueue.CHAT_SERVICE_FOR_USER_EVENTS,
+        true
+    )
+
+    @Bean
+    fun bindingChatServiceForUserEvents(
+        exchangeUserEvents: TopicExchange,
+        queueChatServiceForUserEvent: Queue,
+    ): Binding {
+        return BindingBuilder
+            .bind(queueChatServiceForUserEvent)
             .to(exchangeUserEvents)
             .with(UserEvent.ROUTING_KEY_PATTERN)
     }

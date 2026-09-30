@@ -7,7 +7,7 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.stereotype.Component
 
 @Component
-class UserEventListener(
+class NotificationUserEventListener(
     private val emailService: EmailService
 ) {
 

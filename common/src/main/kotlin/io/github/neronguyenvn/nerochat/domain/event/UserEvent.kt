@@ -25,6 +25,7 @@ sealed class UserEvent : Event() {
     data class Verified(
         val userId: UserId,
         val email: String,
+        val displayName: String,
         override val key: String = VERIFIED_KEY,
     ) : UserEvent()
 

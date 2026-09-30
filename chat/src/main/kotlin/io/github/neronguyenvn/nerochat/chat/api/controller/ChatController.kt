@@ -18,8 +18,8 @@ class ChatController(private val chatService: ChatService) {
 
     @PostMapping
     fun createChat(
+        @Valid @RequestBody body: CreateChatRequest,
         @AuthenticationPrincipal requesterId: UserId,
-        @Valid @RequestBody body: CreateChatRequest
     ): ChatDto {
         val otherUserIds = body.otherUserIds.map { UserId(it) }.toSet()
         return chatService.createChat(
