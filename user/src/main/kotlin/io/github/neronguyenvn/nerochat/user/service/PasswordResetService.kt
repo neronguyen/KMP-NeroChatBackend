@@ -1,5 +1,6 @@
 package io.github.neronguyenvn.nerochat.user.service
 
+import io.github.neronguyenvn.nerochat.domain.util.normalizeEmail
 import io.github.neronguyenvn.nerochat.domain.event.UserEvent
 import io.github.neronguyenvn.nerochat.domain.type.UserId
 import io.github.neronguyenvn.nerochat.infra.messagequeue.EventPublisher
@@ -8,7 +9,6 @@ import io.github.neronguyenvn.nerochat.user.domain.exception.SamePasswordExcepti
 import io.github.neronguyenvn.nerochat.user.domain.exception.UserNotFoundException
 import io.github.neronguyenvn.nerochat.user.domain.exception.WrongPasswordException
 import io.github.neronguyenvn.nerochat.user.domain.model.AuthTokenType
-import io.github.neronguyenvn.nerochat.user.domain.util.normalizeEmail
 import io.github.neronguyenvn.nerochat.user.infra.database.model.AuthTokenEntity
 import io.github.neronguyenvn.nerochat.user.infra.database.model.userId
 import io.github.neronguyenvn.nerochat.user.infra.database.repository.*

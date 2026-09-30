@@ -1,12 +1,12 @@
 package io.github.neronguyenvn.nerochat.user.service
 
+import io.github.neronguyenvn.nerochat.domain.util.normalizeEmail
 import io.github.neronguyenvn.nerochat.domain.event.UserEvent
 import io.github.neronguyenvn.nerochat.domain.type.UserId
 import io.github.neronguyenvn.nerochat.infra.messagequeue.EventPublisher
 import io.github.neronguyenvn.nerochat.user.domain.exception.*
 import io.github.neronguyenvn.nerochat.user.domain.model.AuthenticatedUser
 import io.github.neronguyenvn.nerochat.user.domain.model.User
-import io.github.neronguyenvn.nerochat.user.domain.util.normalizeEmail
 import io.github.neronguyenvn.nerochat.user.infra.database.model.RefreshTokenEntity
 import io.github.neronguyenvn.nerochat.user.infra.database.model.UserEntity
 import io.github.neronguyenvn.nerochat.user.infra.database.model.asExternalModel
