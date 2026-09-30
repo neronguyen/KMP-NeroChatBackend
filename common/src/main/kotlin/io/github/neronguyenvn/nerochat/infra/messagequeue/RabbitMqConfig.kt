@@ -40,19 +40,19 @@ class RabbitMqConfig {
 
     /** Declares a durable queue for user events. */
     @Bean
-    fun queueUserEvents() = Queue(
-        UserEvent.QUEUE_NAME,
+    fun queueNotificationServiceForUserEvents() = Queue(
+        MessageQueue.NOTIFICATION_SERVICE_FOR_USER_EVENTS,
         true
     )
 
     /** Routes events matching [UserEvent.ROUTING_KEY_PATTERN] from the exchange to the queue. */
     @Bean
     fun bindingUserEvents(
-        queueUserEvents: Queue,
+        queueNotificationServiceForUserEvents: Queue,
         exchangeUserEvents: TopicExchange,
     ): Binding {
         return BindingBuilder
-            .bind(queueUserEvents)
+            .bind(queueNotificationServiceForUserEvents)
             .to(exchangeUserEvents)
             .with(UserEvent.ROUTING_KEY_PATTERN)
     }

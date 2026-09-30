@@ -51,7 +51,6 @@ sealed class UserEvent : Event() {
 
     companion object {
         const val EXCHANGE_NAME = "user.events"
-        const val QUEUE_NAME = "user.events"
         const val ROUTING_KEY_PATTERN = "user.*"
 
         const val CREATED_KEY = "user.created"
