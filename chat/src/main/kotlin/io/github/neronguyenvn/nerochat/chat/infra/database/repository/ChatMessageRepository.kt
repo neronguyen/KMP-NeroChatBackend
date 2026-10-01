@@ -1,7 +1,6 @@
 package io.github.neronguyenvn.nerochat.chat.infra.database.repository
 
 import io.github.neronguyenvn.nerochat.chat.infra.database.model.ChatMessageEntity
-import io.github.neronguyenvn.nerochat.domain.type.ChatId
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
@@ -42,18 +41,4 @@ interface ChatMessageRepository : JpaRepository<ChatMessageEntity, UUID> {
     """
     )
     fun findLatestMessagesByChatIds(chatIds: Set<UUID>): List<ChatMessageEntity>
-}
-
-fun ChatMessageRepository.findByChatIdBefore(
-    chatId: ChatId,
-    before: Instant,
-    pageable: Pageable
-): Slice<ChatMessageEntity> {
-    val uuid = UUID.fromString(chatId.value)
-    return findByChatIdBefore(uuid, before, pageable)
-}
-
-fun ChatMessageRepository.findLatestMessagesByChatIds(chatIds: Set<ChatId>): List<ChatMessageEntity> {
-    val setUuid = chatIds.map { UUID.fromString(it.value) }.toSet()
-    return findLatestMessagesByChatIds(setUuid)
 }
