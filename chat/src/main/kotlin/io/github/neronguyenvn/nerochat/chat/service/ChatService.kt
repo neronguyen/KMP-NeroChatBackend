@@ -8,7 +8,9 @@ import io.github.neronguyenvn.nerochat.chat.domain.model.ChatMessage
 import io.github.neronguyenvn.nerochat.chat.infra.database.model.ChatEntity
 import io.github.neronguyenvn.nerochat.chat.infra.database.model.ChatMessageEntity
 import io.github.neronguyenvn.nerochat.chat.infra.database.model.asExternalModel
-import io.github.neronguyenvn.nerochat.chat.infra.database.repository.*
+import io.github.neronguyenvn.nerochat.chat.infra.database.repository.ChatMessageRepository
+import io.github.neronguyenvn.nerochat.chat.infra.database.repository.ChatParticipantRepository
+import io.github.neronguyenvn.nerochat.chat.infra.database.repository.ChatRepository
 import io.github.neronguyenvn.nerochat.domain.exception.ForbiddenException
 import io.github.neronguyenvn.nerochat.domain.type.ChatId
 import io.github.neronguyenvn.nerochat.domain.type.UserId
@@ -30,7 +32,7 @@ class ChatService(
         messageContent: String,
     ): Chat {
         val otherParticipants = chatParticipantRepository.findByUserIdIn(
-            userIds = otherUserIds
+            userIds = otherUserIds.map { it.asUUID() }.toSet()
         )
 
         val allParticipants = (otherParticipants + creatorId)
@@ -38,7 +40,7 @@ class ChatService(
             throw InvalidChatSizeException()
         }
 
-        val creator = chatParticipantRepository.findByUserId(creatorId)
+        val creator = chatParticipantRepository.findByIdOrNull(creatorId.asUUID())
             ?: throw ChatParticipantNotFoundException(creatorId)
 
         val savedChat = chatRepository.save(

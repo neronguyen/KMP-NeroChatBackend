@@ -1,8 +1,8 @@
 package io.github.neronguyenvn.nerochat.user.service
 
-import io.github.neronguyenvn.nerochat.domain.util.normalizeEmail
 import io.github.neronguyenvn.nerochat.domain.event.UserEvent
 import io.github.neronguyenvn.nerochat.domain.type.UserId
+import io.github.neronguyenvn.nerochat.domain.util.normalizeEmail
 import io.github.neronguyenvn.nerochat.infra.messagequeue.EventPublisher
 import io.github.neronguyenvn.nerochat.user.domain.exception.*
 import io.github.neronguyenvn.nerochat.user.domain.model.AuthenticatedUser
@@ -13,9 +13,8 @@ import io.github.neronguyenvn.nerochat.user.infra.database.model.asExternalModel
 import io.github.neronguyenvn.nerochat.user.infra.database.model.userId
 import io.github.neronguyenvn.nerochat.user.infra.database.repository.RefreshTokenRepository
 import io.github.neronguyenvn.nerochat.user.infra.database.repository.UserRepository
-import io.github.neronguyenvn.nerochat.user.infra.database.repository.deleteByUserIdAndHashedToken
-import io.github.neronguyenvn.nerochat.user.infra.database.repository.findByUserId
 import jakarta.transaction.Transactional
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import java.security.MessageDigest
@@ -122,10 +121,10 @@ class AuthService(
         val userId = jwtService.getUserIdFromToken(refreshToken)
         val hashedToken = hashToken(refreshToken)
 
-        val user = userRepository.findByUserId(userId)
+        val user = userRepository.findByIdOrNull(userId.asUUID())
             ?: throw UserNotFoundException()
 
-        val deleted = refreshTokenRepository.deleteByUserIdAndHashedToken(userId, hashedToken)
+        val deleted = refreshTokenRepository.deleteByUserIdAndHashedToken(userId.asUUID(), hashedToken)
         if (deleted == 0L) {
             throw InvalidTokenException("Invalid refresh token")
         }
@@ -156,7 +155,7 @@ class AuthService(
 
         val userId = jwtService.getUserIdFromToken(refreshToken)
         val hashToken = hashToken(refreshToken)
-        refreshTokenRepository.deleteByUserIdAndHashedToken(userId, hashToken)
+        refreshTokenRepository.deleteByUserIdAndHashedToken(userId.asUUID(), hashToken)
     }
 
     /**
