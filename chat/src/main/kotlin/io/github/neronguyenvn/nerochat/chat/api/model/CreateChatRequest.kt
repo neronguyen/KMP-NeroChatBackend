@@ -1,7 +1,9 @@
 package io.github.neronguyenvn.nerochat.chat.api.model
 
 import jakarta.validation.constraints.Size
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class CreateChatRequest(
 
     @field:Size(min = 1, message = "Chats must have at least 2 unique participants")
