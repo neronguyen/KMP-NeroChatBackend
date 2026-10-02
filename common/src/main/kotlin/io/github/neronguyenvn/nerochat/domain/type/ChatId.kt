@@ -5,6 +5,8 @@ import java.util.*
 @JvmInline
 value class ChatId(val value: String) {
 
+    constructor(uuid: UUID) : this(uuid.toString())
+
     fun asUUID(): UUID {
         return UUID.fromString(value)
     }

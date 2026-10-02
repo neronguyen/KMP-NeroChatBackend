@@ -2,6 +2,7 @@ package io.github.neronguyenvn.nerochat.chat.service
 
 import io.github.neronguyenvn.nerochat.chat.api.model.ChatMessageDto
 import io.github.neronguyenvn.nerochat.chat.api.model.asDto
+import io.github.neronguyenvn.nerochat.chat.domain.event.InternalChatEvent
 import io.github.neronguyenvn.nerochat.chat.domain.exception.ChatNotFoundException
 import io.github.neronguyenvn.nerochat.chat.domain.exception.ChatParticipantNotFoundException
 import io.github.neronguyenvn.nerochat.chat.domain.exception.InvalidChatSizeException
@@ -16,6 +17,7 @@ import io.github.neronguyenvn.nerochat.chat.infra.database.repository.ChatReposi
 import io.github.neronguyenvn.nerochat.domain.exception.ForbiddenException
 import io.github.neronguyenvn.nerochat.domain.type.ChatId
 import io.github.neronguyenvn.nerochat.domain.type.UserId
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -26,7 +28,8 @@ import java.time.Instant
 class ChatService(
     private val chatParticipantRepository: ChatParticipantRepository,
     private val chatRepository: ChatRepository,
-    private val chatMessageRepository: ChatMessageRepository
+    private val chatMessageRepository: ChatMessageRepository,
+    private val applicationEventPublisher: ApplicationEventPublisher
 ) {
     fun getChatMessages(
         chatId: ChatId,
@@ -115,6 +118,13 @@ class ChatService(
             }
         ).asExternalModel(lastMessage = lastMessage)
 
+        applicationEventPublisher.publishEvent(
+            InternalChatEvent.ChatParticipantJoinedEvent(
+                chatId = chatId,
+                userIds = userIds
+            )
+        )
+
         return updatedChat
     }
 
@@ -139,6 +149,13 @@ class ChatService(
             chat.apply {
                 this.participants = chat.participants - participant
             }
+        )
+
+        applicationEventPublisher.publishEvent(
+            InternalChatEvent.ChatParticipantLeftEvent(
+                chatId = chatId,
+                userId = userId
+            )
         )
     }
 

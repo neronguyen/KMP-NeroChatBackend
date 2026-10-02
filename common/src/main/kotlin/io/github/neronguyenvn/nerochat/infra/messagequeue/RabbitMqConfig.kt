@@ -1,5 +1,6 @@
 package io.github.neronguyenvn.nerochat.infra.messagequeue
 
+import io.github.neronguyenvn.nerochat.domain.event.ChatEvent
 import io.github.neronguyenvn.nerochat.domain.event.UserEvent
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
@@ -34,6 +35,13 @@ class RabbitMqConfig {
     @Bean
     fun exchangeUserEvents() = TopicExchange(
         UserEvent.EXCHANGE_NAME,
+        true,
+        false
+    )
+
+    @Bean
+    fun exchangeChatEvents() = TopicExchange(
+        ChatEvent.EXCHANGE_NAME,
         true,
         false
     )

@@ -1,5 +1,6 @@
 package io.github.neronguyenvn.nerochat.chat.service
 
+import io.github.neronguyenvn.nerochat.chat.domain.event.InternalChatEvent
 import io.github.neronguyenvn.nerochat.chat.domain.exception.ChatNotFoundException
 import io.github.neronguyenvn.nerochat.chat.domain.exception.ChatParticipantNotFoundException
 import io.github.neronguyenvn.nerochat.chat.domain.exception.MessageNotFoundException
@@ -9,10 +10,13 @@ import io.github.neronguyenvn.nerochat.chat.infra.database.model.asExternalModel
 import io.github.neronguyenvn.nerochat.chat.infra.database.repository.ChatMessageRepository
 import io.github.neronguyenvn.nerochat.chat.infra.database.repository.ChatParticipantRepository
 import io.github.neronguyenvn.nerochat.chat.infra.database.repository.ChatRepository
+import io.github.neronguyenvn.nerochat.domain.event.ChatEvent
 import io.github.neronguyenvn.nerochat.domain.exception.ForbiddenException
 import io.github.neronguyenvn.nerochat.domain.type.ChatId
 import io.github.neronguyenvn.nerochat.domain.type.ChatMessageId
 import io.github.neronguyenvn.nerochat.domain.type.UserId
+import io.github.neronguyenvn.nerochat.infra.messagequeue.EventPublisher
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -21,7 +25,9 @@ import org.springframework.transaction.annotation.Transactional
 class ChatMessageService(
     private val chatRepository: ChatRepository,
     private val chatMessageRepository: ChatMessageRepository,
-    private val chatParticipantRepository: ChatParticipantRepository
+    private val chatParticipantRepository: ChatParticipantRepository,
+    private val eventPublisher: EventPublisher,
+    private val applicationEventPublisher: ApplicationEventPublisher
 ) {
     @Transactional
     fun sendMessage(
@@ -36,12 +42,20 @@ class ChatMessageService(
         val sender = chatParticipantRepository.findByIdOrNull(senderId.asUUID())
             ?: throw ChatParticipantNotFoundException(senderId)
 
-        val savedMessage = chatMessageRepository.save(
+        val savedMessage = chatMessageRepository.saveAndFlush(
             ChatMessageEntity(
                 id = messageId?.asUUID(),
                 chatId = chatId.asUUID(),
                 sender = sender,
                 content = content.trim(),
+            )
+        )
+
+        eventPublisher.publish(
+            event = ChatEvent.NewMessage(
+                chatId = chatId,
+                senderId = UserId(sender.userId),
+                message = savedMessage.content
             )
         )
 
@@ -61,5 +75,12 @@ class ChatMessageService(
         }
 
         chatMessageRepository.delete(message)
+
+        applicationEventPublisher.publishEvent(
+            InternalChatEvent.MessageDeletedEvent(
+                chatId = ChatId(message.chatId),
+                messageId = messageId
+            )
+        )
     }
 }
