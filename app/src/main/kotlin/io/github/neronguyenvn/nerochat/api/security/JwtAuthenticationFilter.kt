@@ -1,4 +1,4 @@
-package io.github.neronguyenvn.nerochat.security
+package io.github.neronguyenvn.nerochat.api.security
 
 import io.github.neronguyenvn.nerochat.user.domain.exception.UserNotFoundException
 import io.github.neronguyenvn.nerochat.user.service.JwtService
