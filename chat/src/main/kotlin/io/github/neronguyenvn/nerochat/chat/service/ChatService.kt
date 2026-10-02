@@ -25,7 +25,9 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
+import kotlin.time.ExperimentalTime
 
+@OptIn(ExperimentalTime::class)
 @Service
 class ChatService(
     private val chatParticipantRepository: ChatParticipantRepository,
@@ -53,6 +55,31 @@ class ChatService(
             .content
             .asReversed()
             .map { it.asExternalModel().asDto() }
+    }
+
+    fun getChatById(
+        chatId: ChatId,
+        requesterId: UserId
+    ): Chat? {
+        return chatRepository
+            .findChatById(chatId.asUUID(), requesterId.asUUID())
+            ?.asExternalModel(lastMessage = findLastMessageOfChat(chatId = chatId))
+    }
+
+    fun findChatsByUser(userId: UserId): List<Chat> {
+        val chatEntities = chatRepository.findAllByUserId(userId.asUUID())
+        val chatIds = chatEntities.mapNotNull { it.id }.toSet()
+
+        val latestMessages = chatMessageRepository
+            .findLatestMessagesByChatIds(chatIds)
+            .associateBy { it.chatId }
+
+        return chatEntities
+            .map { chatEntity ->
+                val lastMessage = latestMessages[chatEntity.id] ?: error("Chat ${chatEntity.id} has no last message")
+                chatEntity.asExternalModel(lastMessage = lastMessage.asExternalModel())
+            }
+            .sortedByDescending { it.lastActivityAt }
     }
 
     @Transactional

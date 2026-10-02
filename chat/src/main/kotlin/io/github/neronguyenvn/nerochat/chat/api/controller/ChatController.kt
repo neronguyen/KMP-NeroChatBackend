@@ -5,8 +5,10 @@ import io.github.neronguyenvn.nerochat.chat.service.ChatService
 import io.github.neronguyenvn.nerochat.domain.type.ChatId
 import io.github.neronguyenvn.nerochat.domain.type.UserId
 import jakarta.validation.Valid
+import org.springframework.http.HttpStatus
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.server.ResponseStatusException
 import java.time.Instant
 
 @RestController
@@ -24,6 +26,25 @@ class ChatController(private val chatService: ChatService) {
             before = before,
             pageSize = pageSize
         )
+    }
+
+    @GetMapping("/{chatId}")
+    fun getChat(
+        @PathVariable("chatId") chatId: ChatId,
+        @AuthenticationPrincipal requesterId: UserId,
+    ): ChatDto {
+        return chatService
+            .getChatById(chatId = chatId, requesterId = requesterId)
+            ?.asDto() ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
+    }
+
+    @GetMapping
+    fun getChatsForUser(
+        @AuthenticationPrincipal requesterId: UserId,
+    ): List<ChatDto> {
+        return chatService
+            .findChatsByUser(userId = requesterId)
+            .map { it.asDto() }
     }
 
     @PostMapping
