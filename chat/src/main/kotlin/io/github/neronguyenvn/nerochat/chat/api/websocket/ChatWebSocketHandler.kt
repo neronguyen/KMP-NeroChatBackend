@@ -48,7 +48,7 @@ class ChatWebSocketHandler(
 
         if (authHeader == null) {
             logger.warn("Session ${session.id} was closed due to missing Authorization header")
-            session.close(CloseStatus.SERVER_ERROR.withReason("Authentication failed"))
+            session.close(CloseStatus.POLICY_VIOLATION.withReason("Authentication failed"))
             return
         }
 
