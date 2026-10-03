@@ -178,8 +178,15 @@ class ChatWebSocketHandler(
         outgoing: OutgoingWsMessage
     ) {
         val sessionIds = sessionIdsByChatId[chatId] ?: return
-        sessionIds.forEach {
-            sessionsById[it]?.sendMessage(outgoing = outgoing)
+        sessionIds.forEach { sessionId ->
+            val session = sessionsById[sessionId] ?: return@forEach
+            val chats = chatIdsByUserId[session.userId]
+            if (chats == null || chatId !in chats) {
+                sessionIds.remove(sessionId)
+                return@forEach
+            }
+
+            session.sendMessage(outgoing = outgoing)
         }
     }
 
