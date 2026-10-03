@@ -1,6 +1,6 @@
 package io.github.neronguyenvn.nerochat.infra.messagequeue
 
-import io.github.neronguyenvn.nerochat.domain.event.ChatEvent
+import io.github.neronguyenvn.nerochat.domain.event.Event
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.stereotype.Component
@@ -17,7 +17,7 @@ class EventPublisher(
      */
     // TODO: handle event with transactional concerns
     // TODO: handle publish confirmation type and return
-    fun <T: ChatEvent> publish(event: T) {
+    fun <T: Event> publish(event: T) {
         try {
             rabbitTemplate.convertAndSend(
                 event.exchangeName,

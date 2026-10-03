@@ -11,12 +11,15 @@ dependencies {
     implementation(projects.notification)
 
     implementation(platform(libs.spring.boot.dependencies))
-    implementation(libs.spring.boot.starter.mail)
     implementation(libs.spring.boot.starter.web)
     implementation(libs.spring.boot.starter.security)
+    implementation(libs.spring.boot.starter.kotlinx.serialization.json)
 
     implementation(libs.kotlin.reflect)
     runtimeOnly(libs.postgresql)
+
+    implementation(libs.redisson.spring.boot.starter)
+    implementation(libs.redisson.spring.cache)
 }
 
 kotlin {

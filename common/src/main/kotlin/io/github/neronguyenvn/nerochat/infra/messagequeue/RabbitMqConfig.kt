@@ -1,5 +1,6 @@
 package io.github.neronguyenvn.nerochat.infra.messagequeue
 
+import io.github.neronguyenvn.nerochat.domain.event.ChatEvent
 import io.github.neronguyenvn.nerochat.domain.event.UserEvent
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
@@ -38,21 +39,45 @@ class RabbitMqConfig {
         false
     )
 
+    @Bean
+    fun exchangeChatEvents() = TopicExchange(
+        ChatEvent.EXCHANGE_NAME,
+        true,
+        false
+    )
+
     /** Declares a durable queue for user events. */
     @Bean
-    fun queueUserEvents() = Queue(
-        UserEvent.QUEUE_NAME,
+    fun queueNotificationServiceForUserEvents() = Queue(
+        MessageQueue.NOTIFICATION_SERVICE_FOR_USER_EVENTS,
         true
     )
 
     /** Routes events matching [UserEvent.ROUTING_KEY_PATTERN] from the exchange to the queue. */
     @Bean
-    fun bindingUserEvents(
-        queueUserEvents: Queue,
+    fun bindingNotificationServiceForUserEvents(
         exchangeUserEvents: TopicExchange,
+        queueNotificationServiceForUserEvents: Queue,
     ): Binding {
         return BindingBuilder
-            .bind(queueUserEvents)
+            .bind(queueNotificationServiceForUserEvents)
+            .to(exchangeUserEvents)
+            .with(UserEvent.ROUTING_KEY_PATTERN)
+    }
+
+    @Bean
+    fun queueChatServiceForUserEvent() = Queue(
+        MessageQueue.CHAT_SERVICE_FOR_USER_EVENTS,
+        true
+    )
+
+    @Bean
+    fun bindingChatServiceForUserEvents(
+        exchangeUserEvents: TopicExchange,
+        queueChatServiceForUserEvent: Queue,
+    ): Binding {
+        return BindingBuilder
+            .bind(queueChatServiceForUserEvent)
             .to(exchangeUserEvents)
             .with(UserEvent.ROUTING_KEY_PATTERN)
     }
