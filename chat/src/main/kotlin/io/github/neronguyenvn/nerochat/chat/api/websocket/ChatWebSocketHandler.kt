@@ -3,6 +3,7 @@ package io.github.neronguyenvn.nerochat.chat.api.websocket
 import io.github.neronguyenvn.nerochat.chat.api.model.asDto
 import io.github.neronguyenvn.nerochat.chat.api.model.websocket.IncomingWsMessage
 import io.github.neronguyenvn.nerochat.chat.api.model.websocket.OutgoingWsMessage
+import io.github.neronguyenvn.nerochat.chat.domain.event.InternalChatEvent
 import io.github.neronguyenvn.nerochat.chat.service.ChatMessageService
 import io.github.neronguyenvn.nerochat.chat.service.ChatService
 import io.github.neronguyenvn.nerochat.domain.type.ChatId
@@ -12,6 +13,8 @@ import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Component
+import org.springframework.transaction.event.TransactionPhase
+import org.springframework.transaction.event.TransactionalEventListener
 import org.springframework.web.socket.CloseStatus
 import org.springframework.web.socket.TextMessage
 import org.springframework.web.socket.WebSocketSession
@@ -117,6 +120,57 @@ class ChatWebSocketHandler(
             chatId = incoming.chatId,
             outgoing = OutgoingWsMessage.NewMessage(savedMessage.asDto())
         )
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    private fun onDeleteMessage(event: InternalChatEvent.MessageDeletedEvent) {
+        broadcastToChat(
+            chatId = event.chatId,
+            outgoing = OutgoingWsMessage.MessageDeleted(
+                chatId = event.chatId,
+                messageId = event.messageId
+            )
+        )
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    private fun onJoinChat(event: InternalChatEvent.ChatParticipantJoinedEvent) {
+        event.newUsers.forEach { user ->
+            chatIdsByUserId
+                .computeIfAbsent(user.userId) { ConcurrentHashMap.newKeySet() }
+                .add(event.chatId)
+
+            sessionIdsByUserId[user.userId]?.let { sessions ->
+                sessionIdsByChatId
+                    .computeIfAbsent(event.chatId) { ConcurrentHashMap.newKeySet() }
+                    .addAll(sessions)
+            }
+        }
+
+        broadcastToChat(
+            chatId = event.chatId,
+            outgoing = OutgoingWsMessage.ParticipantJoined(
+                chatId = event.chatId,
+                newUsers = event.newUsers.map { it.asDto() },
+            )
+        )
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    private fun onLeftChat(event: InternalChatEvent.ChatParticipantLeftEvent) {
+        broadcastToChat(
+            chatId = event.chatId,
+            outgoing = OutgoingWsMessage.ParticipantLeft(
+                chatId = event.chatId,
+                leftUser = event.leftUser.asDto(),
+            )
+        )
+
+        val leftUserId = event.leftUser.userId
+        chatIdsByUserId[leftUserId]?.remove(event.chatId)
+        sessionIdsByUserId[leftUserId]?.forEach { sessionId ->
+            sessionIdsByChatId[event.chatId]?.remove(sessionId)
+        }
     }
 
     private fun broadcastToChat(

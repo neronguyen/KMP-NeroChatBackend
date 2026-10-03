@@ -156,7 +156,7 @@ class ChatService(
         applicationEventPublisher.publishEvent(
             InternalChatEvent.ChatParticipantJoinedEvent(
                 chatId = chatId,
-                userIds = userIds
+                newUsers = users.map { it.asExternalModel() }.toSet()
             )
         )
 
@@ -189,7 +189,7 @@ class ChatService(
         applicationEventPublisher.publishEvent(
             InternalChatEvent.ChatParticipantLeftEvent(
                 chatId = chatId,
-                userId = userId
+                leftUser = participant.asExternalModel()
             )
         )
     }
