@@ -1,13 +1,19 @@
 package io.github.neronguyenvn.nerochat.chat.api.websocket
 
+import io.github.neronguyenvn.nerochat.chat.api.model.asDto
+import io.github.neronguyenvn.nerochat.chat.api.model.websocket.IncomingWsMessage
+import io.github.neronguyenvn.nerochat.chat.api.model.websocket.OutgoingWsMessage
+import io.github.neronguyenvn.nerochat.chat.service.ChatMessageService
 import io.github.neronguyenvn.nerochat.chat.service.ChatService
 import io.github.neronguyenvn.nerochat.domain.type.ChatId
 import io.github.neronguyenvn.nerochat.domain.type.UserId
 import io.github.neronguyenvn.nerochat.service.JwtService
+import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Component
 import org.springframework.web.socket.CloseStatus
+import org.springframework.web.socket.TextMessage
 import org.springframework.web.socket.WebSocketSession
 import org.springframework.web.socket.handler.TextWebSocketHandler
 import java.util.concurrent.ConcurrentHashMap
@@ -15,8 +21,15 @@ import java.util.concurrent.ConcurrentHashMap
 @Component
 class ChatWebSocketHandler(
     private val chatService: ChatService,
-    private val jwtService: JwtService
+    private val chatMessageService: ChatMessageService,
+    private val jwtService: JwtService,
+    private val json: Json = defaultJson
 ) : TextWebSocketHandler() {
+
+    private data class UserSession(
+        val userId: UserId,
+        val session: WebSocketSession
+    )
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -62,9 +75,78 @@ class ChatWebSocketHandler(
         logger.info("Websocket connection established for user $userId")
     }
 
+    override fun handleTextMessage(session: WebSocketSession, message: TextMessage) {
+        logger.debug("Received message ${message.payload}")
+        val userSession = sessionsById[session.id] ?: return
 
-    private data class UserSession(
-        val userId: UserId,
-        val session: WebSocketSession
-    )
+        try {
+            when (val incoming = json.decodeFromString<IncomingWsMessage>(message.payload)) {
+                is IncomingWsMessage.NewMessage -> {
+                    handleIncomingNewMessage(
+                        senderId = userSession.userId,
+                        incoming = incoming
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            logger.warn("Payload decode error from session ${session.id}: ${e.message}")
+            userSession.sendMessage(
+                outgoing = OutgoingWsMessage.Error(
+                    code = "INVALID_JSON",
+                    message = "Malformed payload"
+                )
+            )
+        }
+    }
+
+    private fun handleIncomingNewMessage(
+        senderId: UserId,
+        incoming: IncomingWsMessage.NewMessage,
+    ) {
+        val allowedChats = chatIdsByUserId[senderId] ?: return
+        if (incoming.chatId !in allowedChats) return
+
+        val savedMessage = chatMessageService.sendMessage(
+            chatId = incoming.chatId,
+            senderId = senderId,
+            content = incoming.content,
+            messageId = incoming.messageId
+        )
+
+        broadcastToChat(
+            chatId = incoming.chatId,
+            outgoing = OutgoingWsMessage.NewMessage(savedMessage.asDto())
+        )
+    }
+
+    private fun broadcastToChat(
+        chatId: ChatId,
+        outgoing: OutgoingWsMessage
+    ) {
+        val sessionIds = sessionIdsByChatId[chatId] ?: return
+        sessionIds.forEach {
+            sessionsById[it]?.sendMessage(outgoing = outgoing)
+        }
+    }
+
+    private fun UserSession.sendMessage(outgoing: OutgoingWsMessage) {
+        if (session.isOpen) {
+            try {
+                val payload = TextMessage(json.encodeToString(outgoing))
+                session.sendMessage(payload)
+                logger.debug("Sent message to user {}: {}", userId, payload)
+            } catch (e: Exception) {
+                logger.error("Error while sending message to $userId", e)
+
+            }
+        }
+    }
+
+    private companion object {
+        const val EVENT_TYPE = "type"
+
+        val defaultJson = Json {
+            classDiscriminator = EVENT_TYPE
+        }
+    }
 }

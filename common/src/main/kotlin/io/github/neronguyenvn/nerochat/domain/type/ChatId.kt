@@ -1,8 +1,10 @@
 package io.github.neronguyenvn.nerochat.domain.type
 
+import kotlinx.serialization.Serializable
 import java.util.*
 
 @JvmInline
+@Serializable
 value class ChatId(val value: String) {
 
     constructor(uuid: UUID) : this(uuid.toString())
