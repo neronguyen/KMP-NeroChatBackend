@@ -93,12 +93,12 @@ class ChatWebSocketHandler(
             }
         } catch (e: Exception) {
             logger.warn("Payload decode error from session ${session.id}: ${e.message}")
-            userSession.sendMessage(
-                outgoing = OutgoingWsMessage.Error(
-                    code = "INVALID_JSON",
-                    message = "Malformed payload"
-                )
+            val outgoing = OutgoingWsMessage.Error(
+                code = "INVALID_JSON",
+                message = "Malformed payload"
             )
+            val payload = TextMessage(json.encodeToString(outgoing))
+            userSession.sendMessage(payload)
         }
     }
 
@@ -178,6 +178,8 @@ class ChatWebSocketHandler(
         outgoing: OutgoingWsMessage
     ) {
         val sessionIds = sessionIdsByChatId[chatId] ?: return
+        val payload = TextMessage(json.encodeToString(outgoing))
+
         sessionIds.forEach { sessionId ->
             val session = sessionsById[sessionId] ?: return@forEach
             val chats = chatIdsByUserId[session.userId]
@@ -186,20 +188,18 @@ class ChatWebSocketHandler(
                 return@forEach
             }
 
-            session.sendMessage(outgoing = outgoing)
+            session.sendMessage(message = payload)
         }
     }
 
-    private fun UserSession.sendMessage(outgoing: OutgoingWsMessage) {
-        if (session.isOpen) {
-            try {
-                val payload = TextMessage(json.encodeToString(outgoing))
-                session.sendMessage(payload)
-                logger.debug("Sent message to user {}: {}", userId, payload)
-            } catch (e: Exception) {
-                logger.error("Error while sending message to $userId", e)
+    private fun UserSession.sendMessage(message: TextMessage) {
+        if (!session.isOpen) return
 
-            }
+        try {
+            session.sendMessage(message)
+            logger.debug("Sent message to user {}: {}", userId, message)
+        } catch (e: Exception) {
+            logger.error("Error while sending message to $userId", e)
         }
     }
 
