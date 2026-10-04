@@ -3,6 +3,7 @@ package io.github.neronguyenvn.nerochat.chat.api.controller
 import io.github.neronguyenvn.nerochat.api.util.requesterId
 import io.github.neronguyenvn.nerochat.chat.api.model.*
 import io.github.neronguyenvn.nerochat.chat.service.ChatService
+import io.github.neronguyenvn.nerochat.domain.exception.ForbiddenException
 import io.github.neronguyenvn.nerochat.domain.type.ChatId
 import io.github.neronguyenvn.nerochat.domain.type.UserId
 import jakarta.validation.Valid
@@ -21,6 +22,9 @@ class ChatController(private val chatService: ChatService) {
         @RequestParam("before", required = false) before: Instant? = null,
         @RequestParam("pageSize", required = false) pageSize: Int = DEFAULT_PAGE_SIZE
     ): List<ChatMessageDto> {
+        chatService.getChatById(chatId, requesterId)
+            ?: throw ForbiddenException()
+
         return chatService.getChatMessages(
             chatId = chatId,
             before = before,
