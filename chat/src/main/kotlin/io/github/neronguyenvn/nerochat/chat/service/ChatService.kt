@@ -38,19 +38,18 @@ class ChatService(
     @Cacheable(
         value = [CacheNames.MESSAGES],
         key = "#chatId",
-        condition = "#before == null && #pageSize <= 50",
+        condition = "#before == null",
         sync = true
     )
     fun getChatMessages(
         chatId: ChatId,
         before: Instant?,
-        pageSize: Int
     ): List<ChatMessageDto> {
         return chatMessageRepository
             .findByChatIdBefore(
                 chatId = chatId.asUUID(),
-                before = before ?: Instant.now(),
-                pageable = PageRequest.of(0, pageSize)
+                before = before,
+                pageable = PageRequest.of(0, DEFAULT_PAGE_SIZE)
             )
             .content
             .asReversed()
@@ -207,5 +206,9 @@ class ChatService(
             .findLatestMessagesByChatIds(setOf(chatId.asUUID()))
             .first()
             .asExternalModel()
+    }
+
+    companion object {
+        private const val DEFAULT_PAGE_SIZE = 20
     }
 }

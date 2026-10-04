@@ -14,14 +14,15 @@ interface ChatMessageRepository : JpaRepository<ChatMessageEntity, UUID> {
         """
         SELECT m
         FROM ChatMessageEntity m
+        JOIN FETCH m.sender
         WHERE m.chatId = :chatId
-        AND m.createdAt < :before
+        AND (:before IS NULL OR m.createdAt < :before) 
         ORDER BY m.createdAt DESC
     """
     )
     fun findByChatIdBefore(
         chatId: UUID,
-        before: Instant,
+        before: Instant?,
         pageable: Pageable
     ): Slice<ChatMessageEntity>
 

@@ -20,7 +20,6 @@ class ChatController(private val chatService: ChatService) {
     fun getMessagesForChat(
         @PathVariable("chatId") chatId: ChatId,
         @RequestParam("before", required = false) before: Instant? = null,
-        @RequestParam("pageSize", required = false) pageSize: Int = DEFAULT_PAGE_SIZE
     ): List<ChatMessageDto> {
         chatService.getChatById(chatId, requesterId)
             ?: throw ForbiddenException()
@@ -28,7 +27,6 @@ class ChatController(private val chatService: ChatService) {
         return chatService.getChatMessages(
             chatId = chatId,
             before = before,
-            pageSize = pageSize
         )
     }
 
@@ -80,9 +78,5 @@ class ChatController(private val chatService: ChatService) {
             chatId = chatId,
             userId = requesterId
         )
-    }
-
-    companion object {
-        private const val DEFAULT_PAGE_SIZE = 20
     }
 }

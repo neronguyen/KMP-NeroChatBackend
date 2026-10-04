@@ -55,13 +55,13 @@ class ChatControllerTest {
                 createdAt = Clock.System.now()
             )
         )
-        `when`(chatService.getChatMessages(chatId, null, 20)).thenReturn(expectedMessages)
+        `when`(chatService.getChatMessages(chatId, null)).thenReturn(expectedMessages)
 
         val result = controller.getMessagesForChat(chatId = chatId)
 
         assertEquals(expectedMessages, result)
         verify(chatService).getChatById(chatId, userId)
-        verify(chatService).getChatMessages(chatId, null, 20)
+        verify(chatService).getChatMessages(chatId, null)
     }
 
     @Test
