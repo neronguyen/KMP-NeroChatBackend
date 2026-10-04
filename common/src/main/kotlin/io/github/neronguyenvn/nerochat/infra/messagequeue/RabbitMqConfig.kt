@@ -79,6 +79,6 @@ class RabbitMqConfig {
         return BindingBuilder
             .bind(queueChatServiceForUserEvent)
             .to(exchangeUserEvents)
-            .with(UserEvent.ROUTING_KEY_PATTERN)
+            .with(UserEvent.VERIFIED_KEY)
     }
 }
