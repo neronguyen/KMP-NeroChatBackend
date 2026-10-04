@@ -41,6 +41,10 @@ class JwtAuthenticationFilter(private val jwtService: JwtService) : OncePerReque
         filterChain.doFilter(request, response)
     }
 
+    override fun shouldNotFilter(request: HttpServletRequest): Boolean {
+        return request.servletPath.startsWith("/ws/")
+    }
+
     /** Returns the Authorization header after an exact `Bearer ` prefix, or null if absent or unmatched. */
     private fun resolveToken(request: HttpServletRequest): String? {
         val bearerToken = request.getHeader(AUTHORIZATION_HEADER) ?: return null

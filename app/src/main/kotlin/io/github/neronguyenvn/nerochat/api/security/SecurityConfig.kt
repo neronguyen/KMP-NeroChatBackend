@@ -29,12 +29,23 @@ class SecurityConfig {
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { auth ->
                 auth
+                    // WebSocket handshake
+                    .requestMatchers("/ws/**").permitAll()
+
+                    // Auth routes
                     .requestMatchers("/api/auth/change-password").authenticated()
                     .requestMatchers("/api/auth/**").permitAll()
+
+                    // API routes
                     .requestMatchers("/api/**").authenticated()
-                    .anyRequest().permitAll()
+
+                    // All other routes
+                    .anyRequest().authenticated()
             }
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
+            .addFilterBefore(
+                jwtAuthenticationFilter,
+                UsernamePasswordAuthenticationFilter::class.java
+            )
             .exceptionHandling { configurer ->
                 val unauthorized = HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)
                 configurer.authenticationEntryPoint(unauthorized)
