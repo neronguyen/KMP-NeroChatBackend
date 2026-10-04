@@ -79,6 +79,34 @@ class ChatWebSocketHandler(
         logger.info("Websocket connection established for user $userId")
     }
 
+    override fun afterConnectionClosed(session: WebSocketSession, status: CloseStatus) {
+        val userSession = sessionsById.remove(session.id) ?: return
+        val userId = userSession.userId
+
+        chatIdsByUserId[userId]?.forEach { chatId ->
+            sessionIdsByChatId[chatId]?.remove(session.id)
+        }
+
+        sessionIdsByUserId[userId]?.let { sessions ->
+            sessions.remove(session.id)
+            if (sessions.isEmpty()) {
+                sessionIdsByUserId.remove(userId)
+                chatIdsByUserId.remove(userId)
+            }
+        }
+
+        logger.info("WebSocket closed: user={}, session={}, status={}", userId, session.id, status)
+    }
+
+    override fun handleTransportError(session: WebSocketSession, exception: Throwable) {
+        logger.error("Transport error on session {}", session.id, exception)
+        if (!session.isOpen) return
+
+        runCatching {
+            session.close(CloseStatus.SERVER_ERROR.withReason("Transport error"))
+        }
+    }
+
     @Scheduled(fixedDelay = PING_INTERVAL_MS)
     private fun pingClients() {
         val currentTime = System.currentTimeMillis()
