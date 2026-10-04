@@ -17,6 +17,7 @@ import io.github.neronguyenvn.nerochat.domain.type.ChatMessageId
 import io.github.neronguyenvn.nerochat.domain.type.UserId
 import io.github.neronguyenvn.nerochat.infra.caching.CacheNames
 import io.github.neronguyenvn.nerochat.infra.messagequeue.EventPublisher
+import org.springframework.cache.CacheManager
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.data.repository.findByIdOrNull
@@ -29,7 +30,8 @@ class ChatMessageService(
     private val chatMessageRepository: ChatMessageRepository,
     private val chatParticipantRepository: ChatParticipantRepository,
     private val eventPublisher: EventPublisher,
-    private val applicationEventPublisher: ApplicationEventPublisher
+    private val applicationEventPublisher: ApplicationEventPublisher,
+    private val cacheManager: CacheManager
 ) {
     @Transactional
     @CacheEvict(
@@ -89,14 +91,8 @@ class ChatMessageService(
             )
         )
 
-        evictMessagesCache(ChatId(message.chatId))
-    }
-
-    @CacheEvict(
-        value = ["messages"],
-        key = "#chatId",
-    )
-    private fun evictMessagesCache(chatId: ChatId) {
-        // NO-OP: Let Spring handle the cache evicted
+        cacheManager
+            .getCache(CacheNames.MESSAGES)
+            ?.evict(ChatId(message.chatId))
     }
 }
