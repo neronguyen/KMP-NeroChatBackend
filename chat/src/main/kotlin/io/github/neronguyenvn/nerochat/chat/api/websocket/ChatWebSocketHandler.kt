@@ -53,6 +53,11 @@ class ChatWebSocketHandler(
             return
         }
 
+        if (!jwtService.validateAccessToken(token = authHeader)) {
+            session.close(CloseStatus.POLICY_VIOLATION.withReason("Authentication failed"))
+            return
+        }
+
         val userId = jwtService.getUserIdFromToken(token = authHeader)
         val userSession = UserSession(
             userId = userId,
