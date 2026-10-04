@@ -16,7 +16,7 @@ sealed class IncomingWsMessage {
         val messageId: ChatMessageId? = null
     ) : IncomingWsMessage()
 
-    private companion object {
+    companion object {
         const val NEW_MESSAGE = "new_message"
     }
 }

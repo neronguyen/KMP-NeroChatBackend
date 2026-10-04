@@ -46,7 +46,7 @@ sealed class OutgoingWsMessage {
         val message: String
     ) : OutgoingWsMessage()
 
-    private companion object {
+    companion object {
         const val NEW_MESSAGE = "new_message"
         const val MESSAGE_DELETED = "message_deleted"
         const val PARTICIPANT_JOINED = "participant_joined"
