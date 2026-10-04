@@ -92,18 +92,26 @@ class ChatService(
             userIds = otherUserIds.map { it.asUUID() }.toSet()
         )
 
-        val allParticipants = (otherParticipants + creatorId)
-        if (allParticipants.size < 2) {
+        if (otherParticipants.size != otherUserIds.size) {
+            val foundIds = otherParticipants.map { UserId(it.userId) }.toSet()
+            val missingIds = otherUserIds - foundIds
+            throw ChatParticipantNotFoundException(missingIds.first())
+        }
+
+        val participantCount = otherParticipants.size + 1
+        if (participantCount < 2) {
             throw InvalidChatSizeException()
         }
 
         val creator = chatParticipantRepository.findByIdOrNull(creatorId.asUUID())
             ?: throw ChatParticipantNotFoundException(creatorId)
 
+        val participants = setOf(creator) + otherParticipants
+
         val savedChat = chatRepository.save(
             ChatEntity(
                 creator = creator,
-                participants = otherParticipants
+                participants = participants
             )
         )
 
