@@ -12,14 +12,14 @@ import io.github.neronguyenvn.nerochat.service.JwtService
 import kotlinx.serialization.json.Json
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import org.springframework.transaction.event.TransactionPhase
 import org.springframework.transaction.event.TransactionalEventListener
-import org.springframework.web.socket.CloseStatus
-import org.springframework.web.socket.TextMessage
-import org.springframework.web.socket.WebSocketSession
+import org.springframework.web.socket.*
 import org.springframework.web.socket.handler.TextWebSocketHandler
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicLong
 
 @Component
 class ChatWebSocketHandler(
@@ -31,7 +31,8 @@ class ChatWebSocketHandler(
 
     private data class UserSession(
         val userId: UserId,
-        val session: WebSocketSession
+        val session: WebSocketSession,
+        var lastPongTimestamp: AtomicLong = AtomicLong(System.currentTimeMillis())
     )
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -76,6 +77,46 @@ class ChatWebSocketHandler(
         }
 
         logger.info("Websocket connection established for user $userId")
+    }
+
+    @Scheduled(fixedDelay = PING_INTERVAL_MS)
+    private fun pingClients() {
+        val currentTime = System.currentTimeMillis()
+        val sessionsToClose = mutableListOf<String>()
+
+        sessionsById.entries.forEach { (sessionId, userSession) ->
+            try {
+                if (userSession.session.isOpen) {
+                    val lastPong = userSession.lastPongTimestamp.get()
+                    if (currentTime - lastPong > PONG_TIMEOUT_MS) {
+                        logger.warn("Session $sessionId has timed out, closing connection.")
+                        sessionsToClose.add(sessionId)
+                        return@forEach
+                    }
+
+                    userSession.session.sendMessage(PingMessage())
+                    logger.debug("Sent ping to {}", userSession.userId)
+                }
+            } catch (e: Exception) {
+                logger.error("Could not ping session $sessionId", e)
+                sessionsToClose.add(sessionId)
+            }
+        }
+
+        sessionsToClose.forEach { sessionId ->
+            sessionsById[sessionId]?.session?.let { session ->
+                try {
+                    session.close(CloseStatus.SESSION_NOT_RELIABLE.withReason("Ping timeout"))
+                } catch (e: Exception) {
+                    logger.error("Couldn't close sessions for session ${session.id}", e)
+                }
+            }
+        }
+    }
+
+    override fun handlePongMessage(session: WebSocketSession, message: PongMessage) {
+        sessionsById[session.id]?.lastPongTimestamp?.set(System.currentTimeMillis())
+        logger.debug("Received pong from ${session.id}")
     }
 
     override fun handleTextMessage(session: WebSocketSession, message: TextMessage) {
@@ -203,10 +244,12 @@ class ChatWebSocketHandler(
         }
     }
 
-    private companion object {
-        const val EVENT_TYPE = "type"
+    companion object {
+        private const val PING_INTERVAL_MS = 30_000L
+        private const val PONG_TIMEOUT_MS = 30_000L
 
-        val defaultJson = Json {
+        private const val EVENT_TYPE = "type"
+        private val defaultJson = Json {
             classDiscriminator = EVENT_TYPE
         }
     }
