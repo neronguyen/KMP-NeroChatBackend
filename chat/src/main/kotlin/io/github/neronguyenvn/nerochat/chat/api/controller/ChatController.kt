@@ -1,12 +1,12 @@
 package io.github.neronguyenvn.nerochat.chat.api.controller
 
+import io.github.neronguyenvn.nerochat.api.util.requesterId
 import io.github.neronguyenvn.nerochat.chat.api.model.*
 import io.github.neronguyenvn.nerochat.chat.service.ChatService
 import io.github.neronguyenvn.nerochat.domain.type.ChatId
 import io.github.neronguyenvn.nerochat.domain.type.UserId
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
-import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
 import java.time.Instant
@@ -31,7 +31,6 @@ class ChatController(private val chatService: ChatService) {
     @GetMapping("/{chatId}")
     fun getChat(
         @PathVariable("chatId") chatId: ChatId,
-        @AuthenticationPrincipal requesterId: UserId,
     ): ChatDto {
         return chatService
             .getChatById(chatId = chatId, requesterId = requesterId)
@@ -39,9 +38,7 @@ class ChatController(private val chatService: ChatService) {
     }
 
     @GetMapping
-    fun getChatsForUser(
-        @AuthenticationPrincipal requesterId: UserId,
-    ): List<ChatDto> {
+    fun getChatsForUser(): List<ChatDto> {
         return chatService
             .findChatsByUser(userId = requesterId)
             .map { it.asDto() }
@@ -50,7 +47,6 @@ class ChatController(private val chatService: ChatService) {
     @PostMapping
     fun createChat(
         @Valid @RequestBody body: CreateChatRequest,
-        @AuthenticationPrincipal requesterId: UserId,
     ): ChatDto {
         val otherUserIds = body.otherUserIds.map { UserId(it) }.toSet()
         return chatService.createChat(
@@ -64,7 +60,6 @@ class ChatController(private val chatService: ChatService) {
     fun addChatParticipants(
         @PathVariable chatId: ChatId,
         @Valid @RequestBody body: AddChatParticipantRequest,
-        @AuthenticationPrincipal requesterId: UserId,
     ): ChatDto {
         return chatService.addParticipantsToChat(
             requesterId = requesterId,
@@ -76,7 +71,6 @@ class ChatController(private val chatService: ChatService) {
     @DeleteMapping("/{chatId}/leave")
     fun leaveChat(
         @PathVariable chatId: ChatId,
-        @AuthenticationPrincipal requesterId: UserId,
     ) {
         chatService.removeParticipantFromChat(
             chatId = chatId,

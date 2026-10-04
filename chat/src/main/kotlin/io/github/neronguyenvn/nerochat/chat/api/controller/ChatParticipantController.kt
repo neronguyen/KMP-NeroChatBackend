@@ -1,11 +1,10 @@
 package io.github.neronguyenvn.nerochat.chat.api.controller
 
+import io.github.neronguyenvn.nerochat.api.util.requesterId
 import io.github.neronguyenvn.nerochat.chat.api.model.ChatParticipantDto
 import io.github.neronguyenvn.nerochat.chat.api.model.asDto
 import io.github.neronguyenvn.nerochat.chat.service.ChatParticipantService
-import io.github.neronguyenvn.nerochat.domain.type.UserId
 import org.springframework.http.HttpStatus
-import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -19,7 +18,6 @@ class ChatParticipantController(private val chatParticipantService: ChatParticip
     @GetMapping
     fun getChatParticipantByEmail(
         @RequestParam(required = false) email: String?,
-        @AuthenticationPrincipal requesterId: UserId,
     ): ChatParticipantDto {
         val participant = if (email.isNullOrBlank()) {
             chatParticipantService.findChatParticipantById(userId = requesterId)
