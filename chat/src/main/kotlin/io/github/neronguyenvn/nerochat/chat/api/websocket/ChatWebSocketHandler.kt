@@ -42,6 +42,7 @@ class ChatWebSocketHandler(
     private val chatIdsByUserId = ConcurrentHashMap<UserId, MutableSet<ChatId>>()
     private val sessionIdsByChatId = ConcurrentHashMap<ChatId, MutableSet<String>>()
 
+
     override fun afterConnectionEstablished(session: WebSocketSession) {
         val authHeader = session
             .handshakeHeaders
@@ -59,6 +60,9 @@ class ChatWebSocketHandler(
         }
 
         val userId = jwtService.getUserIdFromToken(token = authHeader)
+
+        // TODO: Wrap WebSocketSession with ConcurrentWebSocketSessionDecorator in afterConnectionEstablished
+        // to prevent IllegalStateException from concurrent writes across ping scheduler, broadcast threads, and event listeners.
         val userSession = UserSession(
             userId = userId,
             session = session
