@@ -165,6 +165,7 @@ class ChatWebSocketHandler(
                     )
                 }
             }
+            // TODO: Handle specific errors
         } catch (e: Exception) {
             logger.warn("Payload decode error from session ${session.id}: ${e.message}")
             val outgoing = OutgoingWsMessage.Error(
