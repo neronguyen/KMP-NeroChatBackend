@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 import kotlin.time.Duration
 
 @Serializable
-sealed class UserEvent : ChatEvent() {
+sealed class UserEvent : Event() {
 
     override val exchangeName: String = EXCHANGE_NAME
 
@@ -25,6 +25,7 @@ sealed class UserEvent : ChatEvent() {
     data class Verified(
         val userId: UserId,
         val email: String,
+        val displayName: String,
         override val key: String = VERIFIED_KEY,
     ) : UserEvent()
 
@@ -51,7 +52,6 @@ sealed class UserEvent : ChatEvent() {
 
     companion object {
         const val EXCHANGE_NAME = "user.events"
-        const val QUEUE_NAME = "user.events"
         const val ROUTING_KEY_PATTERN = "user.*"
 
         const val CREATED_KEY = "user.created"

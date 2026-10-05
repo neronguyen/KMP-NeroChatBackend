@@ -1,7 +1,7 @@
-package io.github.neronguyenvn.nerochat.security
+package io.github.neronguyenvn.nerochat.api.security
 
+import io.github.neronguyenvn.nerochat.service.JwtService
 import io.github.neronguyenvn.nerochat.user.domain.exception.UserNotFoundException
-import io.github.neronguyenvn.nerochat.user.service.JwtService
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -39,6 +39,10 @@ class JwtAuthenticationFilter(private val jwtService: JwtService) : OncePerReque
         }
 
         filterChain.doFilter(request, response)
+    }
+
+    override fun shouldNotFilter(request: HttpServletRequest): Boolean {
+        return request.servletPath.startsWith("/ws/")
     }
 
     /** Returns the Authorization header after an exact `Bearer ` prefix, or null if absent or unmatched. */

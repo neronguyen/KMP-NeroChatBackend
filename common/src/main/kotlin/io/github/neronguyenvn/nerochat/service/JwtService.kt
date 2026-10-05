@@ -1,7 +1,7 @@
-package io.github.neronguyenvn.nerochat.user.service
+package io.github.neronguyenvn.nerochat.service
 
+import io.github.neronguyenvn.nerochat.domain.exception.InvalidTokenException
 import io.github.neronguyenvn.nerochat.domain.type.UserId
-import io.github.neronguyenvn.nerochat.user.domain.exception.InvalidTokenException
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys

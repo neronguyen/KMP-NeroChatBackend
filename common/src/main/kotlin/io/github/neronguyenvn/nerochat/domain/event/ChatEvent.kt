@@ -1,16 +1,25 @@
 package io.github.neronguyenvn.nerochat.domain.event
 
+import io.github.neronguyenvn.nerochat.domain.type.ChatId
+import io.github.neronguyenvn.nerochat.domain.type.UserId
 import kotlinx.serialization.Serializable
-import java.util.*
-import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
 
-@OptIn(ExperimentalTime::class)
 @Serializable
-sealed class ChatEvent {
-    abstract val key: String
-    abstract val exchangeName: String
-    open val id: String = UUID.randomUUID().toString()
-    open val occurredAt: Instant = Clock.System.now()
+sealed class ChatEvent : Event() {
+
+    override val exchangeName: String = EXCHANGE_NAME
+
+    @Serializable
+    data class NewMessage(
+        val chatId: ChatId,
+        val senderId: UserId,
+        val message: String,
+        override val key: String = CHAT_NEW_MESSAGE
+    ) : ChatEvent()
+
+    companion object {
+        const val EXCHANGE_NAME = "chat.events"
+
+        const val CHAT_NEW_MESSAGE = "chat.new_message"
+    }
 }

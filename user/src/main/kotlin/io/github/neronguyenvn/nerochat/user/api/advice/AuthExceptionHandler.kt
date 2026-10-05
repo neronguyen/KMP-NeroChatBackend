@@ -1,5 +1,6 @@
 package io.github.neronguyenvn.nerochat.user.api.advice
 
+import io.github.neronguyenvn.nerochat.domain.exception.InvalidTokenException
 import io.github.neronguyenvn.nerochat.user.domain.exception.*
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.MethodArgumentNotValidException
