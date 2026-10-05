@@ -39,7 +39,6 @@ class EventPublisher(
             logger.info("Successfully published event: ${event.key}")
         } catch (e: Exception) {
             logger.error("Failed to publish ${event.key} event", e)
-            throw e
         }
     }
 }
