@@ -4,6 +4,9 @@ import io.github.neronguyenvn.nerochat.domain.event.Event
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.stereotype.Component
+import org.springframework.transaction.support.TransactionSynchronization
+import org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive
+import org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization
 
 @Component
 class EventPublisher(
@@ -11,13 +14,22 @@ class EventPublisher(
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    /**
-     * Sends [event] to its exchange using its routing key.
-     * Publishing failures are logged and propagated to the caller.
-     */
-    // TODO: handle event with transactional concerns
-    // TODO: handle publish confirmation type and return
-    fun <T: Event> publish(event: T) {
+    // TODO: Handle publisher confirms (correlated acks/nacks)
+    fun publish(event: Event) {
+        val transactionSynchronization = object : TransactionSynchronization {
+            override fun afterCommit() {
+                sendDirect(event)
+            }
+        }
+
+        if (isActualTransactionActive()) {
+            registerSynchronization(transactionSynchronization)
+        } else {
+            sendDirect(event)
+        }
+    }
+
+    private fun sendDirect(event: Event) {
         try {
             rabbitTemplate.convertAndSend(
                 event.exchangeName,
@@ -25,7 +37,7 @@ class EventPublisher(
                 event
             )
             logger.info("Successfully published event: ${event.key}")
-        } catch(e: Exception) {
+        } catch (e: Exception) {
             logger.error("Failed to publish ${event.key} event", e)
             throw e
         }
