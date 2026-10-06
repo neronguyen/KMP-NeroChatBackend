@@ -1,11 +1,13 @@
 package io.github.neronguyenvn.nerochat
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan
 import org.springframework.boot.runApplication
 import org.springframework.scheduling.annotation.EnableScheduling
 
 @SpringBootApplication
 @EnableScheduling
+@ConfigurationPropertiesScan
 class ChatApp
 
 /** Starts the application with [args] passed to Spring Boot. */

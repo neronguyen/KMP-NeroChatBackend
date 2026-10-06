@@ -13,7 +13,7 @@ jwt:
 email:
   url: "http://localhost:8080"
 
-nginx:
+trusted-proxy:
   require-proxy: false
 
 rate-limit:
