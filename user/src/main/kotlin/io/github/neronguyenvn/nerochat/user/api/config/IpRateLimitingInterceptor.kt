@@ -1,7 +1,6 @@
 package io.github.neronguyenvn.nerochat.user.api.config
 
 import io.github.neronguyenvn.nerochat.user.domain.exception.RateLimitExceededException
-import io.github.neronguyenvn.nerochat.user.infra.resolver.IpResolver
 import io.github.neronguyenvn.nerochat.user.service.ratelimiting.IpRateLimitingService
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -15,16 +14,10 @@ import java.time.Duration
 @Component
 class IpRateLimitingInterceptor(
     private val ipRateLimit: IpRateLimitingService,
-    private val ipResolver: IpResolver,
     @param:Value($$"${rate-limit.ip.apply-limit}")
     private val applyLimit: Boolean
 ) : HandlerInterceptor {
 
-    /**
-     * Applies per-client, per-handler limits to annotated methods when limiting is enabled.
-     * Returns false after sending 403 for a client-IP security failure or 429 for an exceeded limit.
-     * Allowed requests continue; other resolver, rate-limit, and response errors propagate.
-     */
     override fun preHandle(
         request: HttpServletRequest,
         response: HttpServletResponse,
@@ -35,12 +28,7 @@ class IpRateLimitingInterceptor(
                 IpRateLimiting::class.java
             ) ?: return true
 
-            val clientIp = try {
-                ipResolver.getClientIp(request)
-            } catch (_: SecurityException) {
-                response.sendError(HttpStatus.FORBIDDEN.value())
-                return false
-            }
+            val clientIp = request.remoteAddr?.takeIf { it.isNotBlank() } ?: "unknown"
 
             val methodKey = "${handler.beanType.simpleName}:${handler.method.name}"
             val compositeKey = "$clientIp:$methodKey"

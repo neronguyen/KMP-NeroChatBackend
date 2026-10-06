@@ -13,7 +13,7 @@ jwt:
 email:
   url: ${DEPLOY_URL}
 
-nginx:
+trusted-proxy:
   require-proxy: true
 
 rate-limit:
