@@ -138,19 +138,17 @@ class ChatRoomService(
         participantIds: List<UserId>,
     ): ChatRoom {
         val uniqueParticipantIds = participantIds.toSet()
-        if (participantIds.size < 2 || uniqueParticipantIds.size < 2) {
-            throw InvalidChatRoomSizeException("Group chat rooms must have at least 2 participants")
+        val otherParticipantIds = uniqueParticipantIds - creatorId
+        if (otherParticipantIds.size < 2) {
+            throw InvalidChatRoomSizeException("Group chat rooms must have at least 2 other participants")
         }
 
         val creator = chatParticipantRepository.findByIdOrNull(creatorId.asUUID())
             ?: throw ChatParticipantNotFoundException(creatorId)
 
-        val otherParticipantIds = uniqueParticipantIds - creatorId
-        val otherParticipants = if (otherParticipantIds.isNotEmpty()) {
-            chatParticipantRepository.findByUserIdIn(otherParticipantIds.map { it.asUUID() }.toSet())
-        } else {
-            emptyList()
-        }
+        val otherParticipants = chatParticipantRepository.findByUserIdIn(
+            otherParticipantIds.map { it.asUUID() }.toSet()
+        )
 
         if (otherParticipants.size != otherParticipantIds.size) {
             val foundIds = otherParticipants.map { UserId(it.userId) }.toSet()
@@ -159,9 +157,6 @@ class ChatRoomService(
         }
 
         val allParticipants = setOf(creator) + otherParticipants
-        if (allParticipants.size < 2) {
-            throw InvalidChatRoomSizeException("Group chat rooms must have at least 2 participants")
-        }
 
         val groupRoom = chatRoomRepository.save(
             ChatRoomEntity(

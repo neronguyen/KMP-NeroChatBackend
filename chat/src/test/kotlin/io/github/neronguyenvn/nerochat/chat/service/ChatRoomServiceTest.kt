@@ -278,6 +278,14 @@ class ChatRoomServiceTest {
                 participantIds = listOf(targetUserId, targetUserId)
             )
         }
+
+        assertThrows<InvalidChatRoomSizeException> {
+            chatRoomService.createGroupChatRoom(
+                creatorId = creatorId,
+                name = "Group",
+                participantIds = listOf(creatorId, targetUserId)
+            )
+        }
     }
 
     @Test
