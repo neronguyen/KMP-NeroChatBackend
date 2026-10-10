@@ -16,7 +16,11 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import org.springframework.transaction.event.TransactionPhase
 import org.springframework.transaction.event.TransactionalEventListener
-import org.springframework.web.socket.*
+import org.springframework.web.socket.CloseStatus
+import org.springframework.web.socket.PingMessage
+import org.springframework.web.socket.PongMessage
+import org.springframework.web.socket.TextMessage
+import org.springframework.web.socket.WebSocketSession
 import org.springframework.web.socket.handler.TextWebSocketHandler
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
@@ -233,6 +237,21 @@ class ChatWebSocketHandler(
                 newUsers = event.newUsers.map { it.asDto() },
             )
         )
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    private fun onRoomCreated(event: InternalChatEvent.ChatRoomCreatedEvent) {
+        event.chatRoom.participants.forEach { user ->
+            chatRoomIdsByUserId
+                .computeIfAbsent(user.userId) { ConcurrentHashMap.newKeySet() }
+                .add(event.chatRoom.id)
+
+            sessionIdsByUserId[user.userId]?.let { sessions ->
+                sessionIdsByChatRoomId
+                    .computeIfAbsent(event.chatRoom.id) { ConcurrentHashMap.newKeySet() }
+                    .addAll(sessions)
+            }
+        }
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)

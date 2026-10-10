@@ -130,6 +130,10 @@ class ChatRoomServiceTest {
 
         verify(chatRoomRepository).save(any(ChatRoomEntity::class.java))
         verify(chatMessageRepository).save(any(ChatMessageEntity::class.java))
+
+        val captor = ArgumentCaptor.forClass(InternalChatEvent.ChatRoomCreatedEvent::class.java)
+        verify(applicationEventPublisher).publishEvent(captor.capture())
+        assertEquals(roomId.toString(), captor.value.chatRoom.id.value)
     }
 
     @Test
@@ -301,6 +305,10 @@ class ChatRoomServiceTest {
         assertNull(result.lastMessage)
 
         verify(chatRoomRepository).save(any(ChatRoomEntity::class.java))
+
+        val captor = ArgumentCaptor.forClass(InternalChatEvent.ChatRoomCreatedEvent::class.java)
+        verify(applicationEventPublisher).publishEvent(captor.capture())
+        assertEquals(roomId.toString(), captor.value.chatRoom.id.value)
     }
 
     @Test

@@ -1,10 +1,15 @@
 package io.github.neronguyenvn.nerochat.chat.domain.event
 
 import io.github.neronguyenvn.nerochat.chat.domain.model.ChatParticipant
+import io.github.neronguyenvn.nerochat.chat.domain.model.ChatRoom
 import io.github.neronguyenvn.nerochat.domain.type.ChatMessageId
 import io.github.neronguyenvn.nerochat.domain.type.ChatRoomId
 
 internal sealed class InternalChatEvent {
+
+    data class ChatRoomCreatedEvent(
+        val chatRoom: ChatRoom
+    ) : InternalChatEvent()
 
     data class ChatParticipantJoinedEvent(
         val chatRoomId: ChatRoomId,

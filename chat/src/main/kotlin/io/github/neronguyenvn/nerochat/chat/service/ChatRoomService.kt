@@ -134,7 +134,13 @@ class ChatRoomService(
             )
         )
 
-        return newRoom.asExternalModel(lastMessage = initialMessage.asExternalModel())
+        val createdRoom = newRoom.asExternalModel(lastMessage = initialMessage.asExternalModel())
+
+        applicationEventPublisher.publishEvent(
+            InternalChatEvent.ChatRoomCreatedEvent(chatRoom = createdRoom)
+        )
+
+        return createdRoom
     }
 
     @Transactional
@@ -173,7 +179,13 @@ class ChatRoomService(
             )
         )
 
-        return groupRoom.asExternalModel(lastMessage = null)
+        val createdRoom = groupRoom.asExternalModel(lastMessage = null)
+
+        applicationEventPublisher.publishEvent(
+            InternalChatEvent.ChatRoomCreatedEvent(chatRoom = createdRoom)
+        )
+
+        return createdRoom
     }
 
     @Transactional
