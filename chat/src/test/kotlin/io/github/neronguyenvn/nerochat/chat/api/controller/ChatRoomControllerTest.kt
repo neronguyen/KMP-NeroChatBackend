@@ -1,10 +1,10 @@
 package io.github.neronguyenvn.nerochat.chat.api.controller
 
 import io.github.neronguyenvn.nerochat.chat.api.model.ChatMessageDto
-import io.github.neronguyenvn.nerochat.chat.domain.model.Chat
-import io.github.neronguyenvn.nerochat.chat.service.ChatService
+import io.github.neronguyenvn.nerochat.chat.domain.model.ChatRoom
+import io.github.neronguyenvn.nerochat.chat.service.ChatRoomService
 import io.github.neronguyenvn.nerochat.domain.exception.ForbiddenException
-import io.github.neronguyenvn.nerochat.domain.type.ChatId
+import io.github.neronguyenvn.nerochat.domain.type.ChatRoomId
 import io.github.neronguyenvn.nerochat.domain.type.UserId
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -19,18 +19,18 @@ import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
-class ChatControllerTest {
+class ChatRoomControllerTest {
 
-    private lateinit var chatService: ChatService
-    private lateinit var controller: ChatController
+    private lateinit var chatRoomService: ChatRoomService
+    private lateinit var controller: ChatRoomController
 
     private val userId = UserId(UUID.randomUUID())
-    private val chatId = ChatId(UUID.randomUUID())
+    private val chatRoomId = ChatRoomId(UUID.randomUUID())
 
     @BeforeEach
     fun setUp() {
-        chatService = mock(ChatService::class.java)
-        controller = ChatController(chatService)
+        chatRoomService = mock(ChatRoomService::class.java)
+        controller = ChatRoomController(chatRoomService)
 
         val authentication = UsernamePasswordAuthenticationToken(userId, null, emptyList())
         SecurityContextHolder.getContext().authentication = authentication
@@ -42,37 +42,37 @@ class ChatControllerTest {
     }
 
     @Test
-    fun `getMessagesForChat returns messages when requester is participant`() {
-        val chat = mock(Chat::class.java)
-        `when`(chatService.getChatById(chatId, userId)).thenReturn(chat)
+    fun `getMessagesForChatRoom returns messages when requester is participant`() {
+        val chatRoom = mock(ChatRoom::class.java)
+        `when`(chatRoomService.getChatRoomById(chatRoomId, userId)).thenReturn(chatRoom)
 
         val expectedMessages = listOf(
             ChatMessageDto(
                 id = UUID.randomUUID().toString(),
-                chatId = chatId.value,
+                chatRoomId = chatRoomId.value,
                 senderId = userId.value,
                 content = "Hello",
                 createdAt = Clock.System.now()
             )
         )
-        `when`(chatService.getChatMessages(chatId, null)).thenReturn(expectedMessages)
+        `when`(chatRoomService.getChatMessages(chatRoomId, null)).thenReturn(expectedMessages)
 
-        val result = controller.getMessagesForChat(chatId = chatId)
+        val result = controller.getMessagesForChatRoom(chatRoomId = chatRoomId)
 
         assertEquals(expectedMessages, result)
-        verify(chatService).getChatById(chatId, userId)
-        verify(chatService).getChatMessages(chatId, null)
+        verify(chatRoomService).getChatRoomById(chatRoomId, userId)
+        verify(chatRoomService).getChatMessages(chatRoomId, null)
     }
 
     @Test
-    fun `getMessagesForChat throws ForbiddenException when requester is not participant`() {
-        `when`(chatService.getChatById(chatId, userId)).thenReturn(null)
+    fun `getMessagesForChatRoom throws ForbiddenException when requester is not participant`() {
+        `when`(chatRoomService.getChatRoomById(chatRoomId, userId)).thenReturn(null)
 
         assertThrows<ForbiddenException> {
-            controller.getMessagesForChat(chatId = chatId)
+            controller.getMessagesForChatRoom(chatRoomId = chatRoomId)
         }
 
-        verify(chatService).getChatById(chatId, userId)
-        verifyNoMoreInteractions(chatService)
+        verify(chatRoomService).getChatRoomById(chatRoomId, userId)
+        verifyNoMoreInteractions(chatRoomService)
     }
 }

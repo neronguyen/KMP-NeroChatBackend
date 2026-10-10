@@ -1,13 +1,13 @@
 package io.github.neronguyenvn.nerochat.chat.api.model
 
-import io.github.neronguyenvn.nerochat.chat.domain.model.Chat
+import io.github.neronguyenvn.nerochat.chat.domain.model.ChatRoom
 import kotlinx.serialization.Serializable
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 @OptIn(ExperimentalTime::class)
 @Serializable
-data class ChatDto(
+data class ChatRoomDto(
     val id: String,
     val creator: ChatParticipantDto,
     val participants: List<ChatParticipantDto>,
@@ -16,7 +16,7 @@ data class ChatDto(
 )
 
 @OptIn(ExperimentalTime::class)
-fun Chat.asDto(): ChatDto = ChatDto(
+fun ChatRoom.asDto(): ChatRoomDto = ChatRoomDto(
     id = id.value,
     creator = creator.asDto(),
     participants = participants.map { it.asDto() },

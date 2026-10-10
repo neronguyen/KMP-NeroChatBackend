@@ -1,6 +1,6 @@
 package io.github.neronguyenvn.nerochat.domain.event
 
-import io.github.neronguyenvn.nerochat.domain.type.ChatId
+import io.github.neronguyenvn.nerochat.domain.type.ChatRoomId
 import io.github.neronguyenvn.nerochat.domain.type.UserId
 import kotlinx.serialization.Serializable
 
@@ -11,7 +11,7 @@ sealed class ChatEvent : Event() {
 
     @Serializable
     data class NewMessage(
-        val chatId: ChatId,
+        val chatRoomId: ChatRoomId,
         val senderId: UserId,
         val message: String,
         override val key: String = CHAT_NEW_MESSAGE

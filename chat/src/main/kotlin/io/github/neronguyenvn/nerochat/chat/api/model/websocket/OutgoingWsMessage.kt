@@ -2,8 +2,8 @@ package io.github.neronguyenvn.nerochat.chat.api.model.websocket
 
 import io.github.neronguyenvn.nerochat.chat.api.model.ChatMessageDto
 import io.github.neronguyenvn.nerochat.chat.api.model.ChatParticipantDto
-import io.github.neronguyenvn.nerochat.domain.type.ChatId
 import io.github.neronguyenvn.nerochat.domain.type.ChatMessageId
+import io.github.neronguyenvn.nerochat.domain.type.ChatRoomId
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -19,14 +19,14 @@ sealed class OutgoingWsMessage {
     @Serializable
     @SerialName(MESSAGE_DELETED)
     data class MessageDeleted(
-        val chatId: ChatId,
+        val chatRoomId: ChatRoomId,
         val messageId: ChatMessageId
     ) : OutgoingWsMessage()
 
     @Serializable
     @SerialName(PARTICIPANT_JOINED)
     data class ParticipantJoined(
-        val chatId: ChatId,
+        val chatRoomId: ChatRoomId,
         val newUsers: List<ChatParticipantDto>,
         val addedBy: ChatParticipantDto? = null
     ) : OutgoingWsMessage()
@@ -34,7 +34,7 @@ sealed class OutgoingWsMessage {
     @Serializable
     @SerialName(PARTICIPANT_LEFT)
     data class ParticipantLeft(
-        val chatId: ChatId,
+        val chatRoomId: ChatRoomId,
         val leftUser: ChatParticipantDto,
         val kickedBy: ChatParticipantDto? = null
     ) : OutgoingWsMessage()

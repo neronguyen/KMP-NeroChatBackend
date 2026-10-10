@@ -1,8 +1,8 @@
 package io.github.neronguyenvn.nerochat.chat.api.advice
 
-import io.github.neronguyenvn.nerochat.chat.domain.exception.ChatNotFoundException
 import io.github.neronguyenvn.nerochat.chat.domain.exception.ChatParticipantNotFoundException
-import io.github.neronguyenvn.nerochat.chat.domain.exception.InvalidChatSizeException
+import io.github.neronguyenvn.nerochat.chat.domain.exception.ChatRoomNotFoundException
+import io.github.neronguyenvn.nerochat.chat.domain.exception.InvalidChatRoomSizeException
 import io.github.neronguyenvn.nerochat.chat.domain.exception.MessageNotFoundException
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 class ChatExceptionHandler {
 
     @ExceptionHandler(
-        ChatNotFoundException::class,
+        ChatRoomNotFoundException::class,
         MessageNotFoundException::class,
         ChatParticipantNotFoundException::class,
     )
@@ -23,10 +23,10 @@ class ChatExceptionHandler {
         "message" to e.message
     )
 
-    @ExceptionHandler(InvalidChatSizeException::class)
+    @ExceptionHandler(InvalidChatRoomSizeException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    fun onForbidden(e: InvalidChatSizeException) = mapOf(
-        "code" to "INVALID_CHAT_SIZE",
+    fun onForbidden(e: InvalidChatRoomSizeException) = mapOf(
+        "code" to "INVALID_CHAT_ROOM_SIZE",
         "message" to e.message
     )
 }

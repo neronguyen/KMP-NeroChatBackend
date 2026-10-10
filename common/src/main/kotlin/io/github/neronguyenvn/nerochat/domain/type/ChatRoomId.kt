@@ -5,7 +5,7 @@ import java.util.*
 
 @JvmInline
 @Serializable
-value class ChatId(val value: String) {
+value class ChatRoomId(val value: String) {
 
     constructor(uuid: UUID) : this(uuid.toString())
 
