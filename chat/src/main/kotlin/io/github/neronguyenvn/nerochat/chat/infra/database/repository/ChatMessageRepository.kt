@@ -15,13 +15,13 @@ interface ChatMessageRepository : JpaRepository<ChatMessageEntity, UUID> {
         SELECT m
         FROM ChatMessageEntity m
         JOIN FETCH m.sender
-        WHERE m.chatId = :chatId
+        WHERE m.chatRoomId = :chatRoomId
         AND (:before IS NULL OR m.createdAt < :before) 
         ORDER BY m.createdAt DESC
     """
     )
-    fun findByChatIdBefore(
-        chatId: UUID,
+    fun findByChatRoomIdBefore(
+        chatRoomId: UUID,
         before: Instant?,
         pageable: Pageable
     ): Slice<ChatMessageEntity>
@@ -31,15 +31,15 @@ interface ChatMessageRepository : JpaRepository<ChatMessageEntity, UUID> {
         SELECT m
         FROM ChatMessageEntity m
         LEFT JOIN FETCH m.sender
-        WHERE m.chatId IN :chatIds
+        WHERE m.chatRoomId IN :chatRoomIds
         AND (m.createdAt, m.id) = (
             SELECT m2.createdAt, m2.id
             FROM ChatMessageEntity m2
-            WHERE m2.chatId = m.chatId
+            WHERE m2.chatRoomId = m.chatRoomId
             ORDER BY m2.createdAt DESC 
             LIMIT 1
         )
     """
     )
-    fun findLatestMessagesByChatIds(chatIds: Set<UUID>): List<ChatMessageEntity>
+    fun findLatestMessagesByChatRoomIds(chatRoomIds: Set<UUID>): List<ChatMessageEntity>
 }

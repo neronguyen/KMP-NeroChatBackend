@@ -5,8 +5,8 @@ import io.github.neronguyenvn.nerochat.chat.api.model.websocket.IncomingWsMessag
 import io.github.neronguyenvn.nerochat.chat.api.model.websocket.OutgoingWsMessage
 import io.github.neronguyenvn.nerochat.chat.domain.event.InternalChatEvent
 import io.github.neronguyenvn.nerochat.chat.service.ChatMessageService
-import io.github.neronguyenvn.nerochat.chat.service.ChatService
-import io.github.neronguyenvn.nerochat.domain.type.ChatId
+import io.github.neronguyenvn.nerochat.chat.service.ChatRoomService
+import io.github.neronguyenvn.nerochat.domain.type.ChatRoomId
 import io.github.neronguyenvn.nerochat.domain.type.UserId
 import io.github.neronguyenvn.nerochat.service.JwtService
 import kotlinx.serialization.json.Json
@@ -16,14 +16,18 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import org.springframework.transaction.event.TransactionPhase
 import org.springframework.transaction.event.TransactionalEventListener
-import org.springframework.web.socket.*
+import org.springframework.web.socket.CloseStatus
+import org.springframework.web.socket.PingMessage
+import org.springframework.web.socket.PongMessage
+import org.springframework.web.socket.TextMessage
+import org.springframework.web.socket.WebSocketSession
 import org.springframework.web.socket.handler.TextWebSocketHandler
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 
 @Component
 class ChatWebSocketHandler(
-    private val chatService: ChatService,
+    private val chatRoomService: ChatRoomService,
     private val chatMessageService: ChatMessageService,
     private val jwtService: JwtService,
     private val json: Json = defaultJson
@@ -39,8 +43,8 @@ class ChatWebSocketHandler(
 
     private val sessionsById = ConcurrentHashMap<String, UserSession>()
     private val sessionIdsByUserId = ConcurrentHashMap<UserId, MutableSet<String>>()
-    private val chatIdsByUserId = ConcurrentHashMap<UserId, MutableSet<ChatId>>()
-    private val sessionIdsByChatId = ConcurrentHashMap<ChatId, MutableSet<String>>()
+    private val chatRoomIdsByUserId = ConcurrentHashMap<UserId, MutableSet<ChatRoomId>>()
+    private val sessionIdsByChatRoomId = ConcurrentHashMap<ChatRoomId, MutableSet<String>>()
 
 
     override fun afterConnectionEstablished(session: WebSocketSession) {
@@ -74,14 +78,14 @@ class ChatWebSocketHandler(
             .computeIfAbsent(userId) { ConcurrentHashMap.newKeySet() }
             .add(session.id)
 
-        val chatIds = chatIdsByUserId.computeIfAbsent(userId) {
-            val userChats = chatService.findChatsByUser(userId = userId).map { it.id }
-            ConcurrentHashMap.newKeySet<ChatId>().apply { addAll(userChats) }
+        val chatRoomIds = chatRoomIdsByUserId.computeIfAbsent(userId) {
+            val userChatRooms = chatRoomService.findChatRoomsByUser(userId = userId).map { it.id }
+            ConcurrentHashMap.newKeySet<ChatRoomId>().apply { addAll(userChatRooms) }
         }
 
-        chatIds.forEach { chatId ->
-            sessionIdsByChatId
-                .computeIfAbsent(chatId) { ConcurrentHashMap.newKeySet() }
+        chatRoomIds.forEach { chatRoomId ->
+            sessionIdsByChatRoomId
+                .computeIfAbsent(chatRoomId) { ConcurrentHashMap.newKeySet() }
                 .add(session.id)
         }
 
@@ -92,15 +96,15 @@ class ChatWebSocketHandler(
         val userSession = sessionsById.remove(session.id) ?: return
         val userId = userSession.userId
 
-        chatIdsByUserId[userId]?.forEach { chatId ->
-            sessionIdsByChatId[chatId]?.remove(session.id)
+        chatRoomIdsByUserId[userId]?.forEach { chatRoomId ->
+            sessionIdsByChatRoomId[chatRoomId]?.remove(session.id)
         }
 
         sessionIdsByUserId[userId]?.let { sessions ->
             sessions.remove(session.id)
             if (sessions.isEmpty()) {
                 sessionIdsByUserId.remove(userId)
-                chatIdsByUserId.remove(userId)
+                chatRoomIdsByUserId.remove(userId)
             }
         }
 
@@ -185,84 +189,99 @@ class ChatWebSocketHandler(
         senderId: UserId,
         incoming: IncomingWsMessage.NewMessage,
     ) {
-        val allowedChats = chatIdsByUserId[senderId] ?: return
-        if (incoming.chatId !in allowedChats) return
+        val allowedChatRooms = chatRoomIdsByUserId[senderId] ?: return
+        if (incoming.chatRoomId !in allowedChatRooms) return
 
         val savedMessage = chatMessageService.sendMessage(
-            chatId = incoming.chatId,
+            chatRoomId = incoming.chatRoomId,
             senderId = senderId,
             content = incoming.content,
             messageId = incoming.messageId
         )
 
-        broadcastToChat(
-            chatId = incoming.chatId,
+        broadcastToChatRoom(
+            chatRoomId = incoming.chatRoomId,
             outgoing = OutgoingWsMessage.NewMessage(savedMessage.asDto())
         )
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     private fun onDeleteMessage(event: InternalChatEvent.MessageDeletedEvent) {
-        broadcastToChat(
-            chatId = event.chatId,
+        broadcastToChatRoom(
+            chatRoomId = event.chatRoomId,
             outgoing = OutgoingWsMessage.MessageDeleted(
-                chatId = event.chatId,
+                chatRoomId = event.chatRoomId,
                 messageId = event.messageId
             )
         )
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    private fun onJoinChat(event: InternalChatEvent.ChatParticipantJoinedEvent) {
+    private fun onJoinChatRoom(event: InternalChatEvent.ChatParticipantJoinedEvent) {
         event.newUsers.forEach { user ->
-            chatIdsByUserId
+            chatRoomIdsByUserId
                 .computeIfAbsent(user.userId) { ConcurrentHashMap.newKeySet() }
-                .add(event.chatId)
+                .add(event.chatRoomId)
 
             sessionIdsByUserId[user.userId]?.let { sessions ->
-                sessionIdsByChatId
-                    .computeIfAbsent(event.chatId) { ConcurrentHashMap.newKeySet() }
+                sessionIdsByChatRoomId
+                    .computeIfAbsent(event.chatRoomId) { ConcurrentHashMap.newKeySet() }
                     .addAll(sessions)
             }
         }
 
-        broadcastToChat(
-            chatId = event.chatId,
+        broadcastToChatRoom(
+            chatRoomId = event.chatRoomId,
             outgoing = OutgoingWsMessage.ParticipantJoined(
-                chatId = event.chatId,
+                chatRoomId = event.chatRoomId,
                 newUsers = event.newUsers.map { it.asDto() },
             )
         )
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    private fun onLeftChat(event: InternalChatEvent.ChatParticipantLeftEvent) {
-        broadcastToChat(
-            chatId = event.chatId,
+    private fun onRoomCreated(event: InternalChatEvent.ChatRoomCreatedEvent) {
+        event.chatRoom.participants.forEach { user ->
+            chatRoomIdsByUserId
+                .computeIfAbsent(user.userId) { ConcurrentHashMap.newKeySet() }
+                .add(event.chatRoom.id)
+
+            sessionIdsByUserId[user.userId]?.let { sessions ->
+                sessionIdsByChatRoomId
+                    .computeIfAbsent(event.chatRoom.id) { ConcurrentHashMap.newKeySet() }
+                    .addAll(sessions)
+            }
+        }
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    private fun onLeftChatRoom(event: InternalChatEvent.ChatParticipantLeftEvent) {
+        broadcastToChatRoom(
+            chatRoomId = event.chatRoomId,
             outgoing = OutgoingWsMessage.ParticipantLeft(
-                chatId = event.chatId,
+                chatRoomId = event.chatRoomId,
                 leftUser = event.leftUser.asDto(),
             )
         )
 
         val leftUserId = event.leftUser.userId
-        chatIdsByUserId[leftUserId]?.remove(event.chatId)
+        chatRoomIdsByUserId[leftUserId]?.remove(event.chatRoomId)
         sessionIdsByUserId[leftUserId]?.forEach { sessionId ->
-            sessionIdsByChatId[event.chatId]?.remove(sessionId)
+            sessionIdsByChatRoomId[event.chatRoomId]?.remove(sessionId)
         }
     }
 
-    private fun broadcastToChat(
-        chatId: ChatId,
+    private fun broadcastToChatRoom(
+        chatRoomId: ChatRoomId,
         outgoing: OutgoingWsMessage
     ) {
-        val sessionIds = sessionIdsByChatId[chatId] ?: return
+        val sessionIds = sessionIdsByChatRoomId[chatRoomId] ?: return
         val payload = TextMessage(json.encodeToString(outgoing))
 
         sessionIds.forEach { sessionId ->
             val session = sessionsById[sessionId] ?: return@forEach
-            val chats = chatIdsByUserId[session.userId]
-            if (chats == null || chatId !in chats) {
+            val chatRooms = chatRoomIdsByUserId[session.userId]
+            if (chatRooms == null || chatRoomId !in chatRooms) {
                 sessionIds.remove(sessionId)
                 return@forEach
             }

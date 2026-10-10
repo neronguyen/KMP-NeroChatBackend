@@ -9,7 +9,7 @@ import kotlin.time.Instant
 @Serializable
 data class ChatMessageDto(
     val id: String,
-    val chatId: String,
+    val chatRoomId: String,
     val senderId: String,
     val content: String,
     val createdAt: Instant,
@@ -18,7 +18,7 @@ data class ChatMessageDto(
 @OptIn(ExperimentalTime::class)
 fun ChatMessage.asDto(): ChatMessageDto = ChatMessageDto(
     id = id.value,
-    chatId = chatId.value,
+    chatRoomId = chatRoomId.value,
     senderId = sender.userId.value,
     content = content,
     createdAt = createdAt,
