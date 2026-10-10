@@ -25,7 +25,6 @@ import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
-import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.springframework.context.ApplicationEventPublisher
@@ -177,10 +176,11 @@ class ChatRoomServiceTest {
 
         verify(chatRoomRepository, never()).save(any(ChatRoomEntity::class.java))
         verify(chatMessageRepository, never()).save(any(ChatMessageEntity::class.java))
+        verify(applicationEventPublisher, never()).publishEvent(any())
     }
 
     @Test
-    fun `handles concurrent creation by catching DataIntegrityViolationException and re-reading existing room`() {
+    fun `createDirectChatRoom throws DataIntegrityViolationException when repository save throws exception`() {
         `when`(chatParticipantRepository.findById(creatorId.asUUID())).thenReturn(
             Optional.of(
                 creatorEntity
@@ -192,47 +192,22 @@ class ChatRoomServiceTest {
             )
         )
 
-        val existingRoomId = UUID.randomUUID()
         val directPairKey = DirectPairKey.of(creatorId, targetUserId).value
-        val existingRoomEntity = ChatRoomEntity(
-            id = existingRoomId,
-            type = ChatRoomType.DIRECT,
-            directPairKey = directPairKey,
-            creator = creatorEntity,
-            participants = setOf(creatorEntity, targetEntity),
-            createdAt = Instant.now()
-        )
-
-        `when`(chatRoomRepository.findDirectChatRoomBetween(directPairKey))
-            .thenReturn(null)
-            .thenReturn(existingRoomEntity)
-
+        `when`(chatRoomRepository.findDirectChatRoomBetween(directPairKey)).thenReturn(null)
         `when`(chatRoomRepository.save(any(ChatRoomEntity::class.java)))
             .thenThrow(DataIntegrityViolationException("Duplicate entry"))
 
-        val existingMessageEntity = ChatMessageEntity(
-            id = UUID.randomUUID(),
-            chatRoomId = existingRoomId,
-            sender = creatorEntity,
-            content = "Concurrent message",
-            createdAt = Instant.now()
-        )
-        `when`(chatMessageRepository.findLatestMessagesByChatRoomIds(setOf(existingRoomId)))
-            .thenReturn(listOf(existingMessageEntity))
-        `when`(chatMessageRepository.save(any(ChatMessageEntity::class.java)))
-            .thenReturn(existingMessageEntity)
-
-        val result = chatRoomService.createDirectChatRoom(
-            creatorId = creatorId,
-            targetUserId = targetUserId,
-            message = "Some message"
-        )
-
-        assertEquals(existingRoomId.toString(), result.id.value)
-        assertEquals(ChatRoomType.DIRECT, result.type)
+        assertThrows<DataIntegrityViolationException> {
+            chatRoomService.createDirectChatRoom(
+                creatorId = creatorId,
+                targetUserId = targetUserId,
+                message = "Some message"
+            )
+        }
 
         verify(chatRoomRepository).save(any(ChatRoomEntity::class.java))
-        verify(chatRoomRepository, times(2)).findDirectChatRoomBetween(directPairKey)
+        verify(chatMessageRepository, never()).save(any(ChatMessageEntity::class.java))
+        verify(applicationEventPublisher, never()).publishEvent(any())
     }
 
     @Test
