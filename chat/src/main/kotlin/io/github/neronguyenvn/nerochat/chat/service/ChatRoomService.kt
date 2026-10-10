@@ -8,6 +8,7 @@ import io.github.neronguyenvn.nerochat.chat.domain.exception.ChatRoomNotFoundExc
 import io.github.neronguyenvn.nerochat.chat.domain.exception.InvalidChatRoomSizeException
 import io.github.neronguyenvn.nerochat.chat.domain.model.ChatMessage
 import io.github.neronguyenvn.nerochat.chat.domain.model.ChatRoom
+import io.github.neronguyenvn.nerochat.chat.domain.model.ChatRoomType
 import io.github.neronguyenvn.nerochat.chat.infra.database.model.ChatMessageEntity
 import io.github.neronguyenvn.nerochat.chat.infra.database.model.ChatRoomEntity
 import io.github.neronguyenvn.nerochat.chat.infra.database.model.asExternalModel
@@ -33,7 +34,7 @@ class ChatRoomService(
     private val chatParticipantRepository: ChatParticipantRepository,
     private val chatRoomRepository: ChatRoomRepository,
     private val chatMessageRepository: ChatMessageRepository,
-    private val applicationEventPublisher: ApplicationEventPublisher
+    private val applicationEventPublisher: ApplicationEventPublisher,
 ) {
     @Cacheable(
         value = [CacheNames.MESSAGES],
@@ -75,54 +76,103 @@ class ChatRoomService(
 
         return chatRoomEntities
             .map { chatRoomEntity ->
-                val lastMessage = latestMessages[chatRoomEntity.id] ?: error("ChatRoom ${chatRoomEntity.id} has no last message")
-                chatRoomEntity.asExternalModel(lastMessage = lastMessage.asExternalModel())
+                val lastMessage = latestMessages[chatRoomEntity.id]?.asExternalModel()
+                chatRoomEntity.asExternalModel(lastMessage = lastMessage)
             }
             .sortedByDescending { it.lastActivityAt }
     }
 
     @Transactional
-    fun createChatRoom(
+    fun createDirectChatRoom(
         creatorId: UserId,
-        otherUserIds: Set<UserId>,
-        messageContent: String,
+        targetUserId: UserId,
+        message: String,
     ): ChatRoom {
-        val otherParticipants = chatParticipantRepository.findByUserIdIn(
-            userIds = otherUserIds.map { it.asUUID() }.toSet()
-        )
-
-        if (otherParticipants.size != otherUserIds.size) {
-            val foundIds = otherParticipants.map { UserId(it.userId) }.toSet()
-            val missingIds = otherUserIds - foundIds
-            throw ChatParticipantNotFoundException(missingIds.first())
-        }
-
-        val participantCount = otherParticipants.size + 1
-        if (participantCount < 2) {
-            throw InvalidChatRoomSizeException()
+        if (creatorId == targetUserId) {
+            throw InvalidChatRoomSizeException("Cannot create a direct chat room with yourself")
         }
 
         val creator = chatParticipantRepository.findByIdOrNull(creatorId.asUUID())
             ?: throw ChatParticipantNotFoundException(creatorId)
 
-        val participants = setOf(creator) + otherParticipants
+        val target = chatParticipantRepository.findByIdOrNull(targetUserId.asUUID())
+            ?: throw ChatParticipantNotFoundException(targetUserId)
 
-        val savedChatRoom = chatRoomRepository.save(
+        val existingRoom = chatRoomRepository.findDirectChatRoomBetween(
+            userId1 = creatorId.asUUID(),
+            userId2 = targetUserId.asUUID(),
+        )
+
+        if (existingRoom != null) {
+            val lastMessage = chatMessageRepository
+                .findLatestMessagesByChatRoomIds(setOf(existingRoom.id!!))
+                .firstOrNull()
+                ?.asExternalModel()
+
+            return existingRoom.asExternalModel(lastMessage = lastMessage)
+        }
+
+        val newRoom = chatRoomRepository.save(
             ChatRoomEntity(
+                type = ChatRoomType.DIRECT,
                 creator = creator,
-                participants = participants
+                participants = setOf(creator, target),
             )
         )
 
-        val savedMessage = chatMessageRepository.save(
+        val initialMessage = chatMessageRepository.save(
             ChatMessageEntity(
-                chatRoomId = savedChatRoom.id ?: error("ChatRoomId have to be generated"),
+                chatRoomId = newRoom.id ?: error("ChatRoomId must be generated"),
                 sender = creator,
-                content = messageContent
+                content = message.trim(),
             )
         )
 
-        return savedChatRoom.asExternalModel(savedMessage.asExternalModel())
+        return newRoom.asExternalModel(lastMessage = initialMessage.asExternalModel())
+    }
+
+    @Transactional
+    fun createGroupChatRoom(
+        creatorId: UserId,
+        name: String,
+        participantIds: List<UserId>,
+    ): ChatRoom {
+        val uniqueParticipantIds = participantIds.toSet()
+        if (participantIds.size < 2 || uniqueParticipantIds.size < 2) {
+            throw InvalidChatRoomSizeException("Group chat rooms must have at least 2 participants")
+        }
+
+        val creator = chatParticipantRepository.findByIdOrNull(creatorId.asUUID())
+            ?: throw ChatParticipantNotFoundException(creatorId)
+
+        val otherParticipantIds = uniqueParticipantIds - creatorId
+        val otherParticipants = if (otherParticipantIds.isNotEmpty()) {
+            chatParticipantRepository.findByUserIdIn(otherParticipantIds.map { it.asUUID() }.toSet())
+        } else {
+            emptyList()
+        }
+
+        if (otherParticipants.size != otherParticipantIds.size) {
+            val foundIds = otherParticipants.map { UserId(it.userId) }.toSet()
+            val missingIds = otherParticipantIds - foundIds
+            throw ChatParticipantNotFoundException(missingIds.first())
+        }
+
+        val allParticipants = setOf(creator) + otherParticipants
+        if (allParticipants.size < 2) {
+            throw InvalidChatRoomSizeException("Group chat rooms must have at least 2 participants")
+        }
+
+        val groupRoom = chatRoomRepository.save(
+            ChatRoomEntity(
+                type = ChatRoomType.GROUP,
+                name = name.trim(),
+                creator = creator,
+                participants = allParticipants,
+            )
+        )
+
+        return groupRoom.asExternalModel(lastMessage = null)
     }
 
     @Transactional
@@ -201,11 +251,11 @@ class ChatRoomService(
         )
     }
 
-    private fun findLastMessageOfChatRoom(chatRoomId: ChatRoomId): ChatMessage {
+    private fun findLastMessageOfChatRoom(chatRoomId: ChatRoomId): ChatMessage? {
         return chatMessageRepository
             .findLatestMessagesByChatRoomIds(setOf(chatRoomId.asUUID()))
-            .first()
-            .asExternalModel()
+            .firstOrNull()
+            ?.asExternalModel()
     }
 
     companion object {

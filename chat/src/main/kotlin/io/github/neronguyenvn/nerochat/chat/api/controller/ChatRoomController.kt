@@ -46,15 +46,25 @@ class ChatRoomController(private val chatRoomService: ChatRoomService) {
             .map { it.asDto() }
     }
 
-    @PostMapping
-    fun createChatRoom(
-        @Valid @RequestBody body: CreateChatRoomRequest,
+    @PostMapping("/direct")
+    fun createDirectChatRoom(
+        @Valid @RequestBody body: CreateDirectChatRoomRequest,
     ): ChatRoomDto {
-        val otherUserIds = body.otherUserIds.map { UserId(it) }.toSet()
-        return chatRoomService.createChatRoom(
+        return chatRoomService.createDirectChatRoom(
             creatorId = requesterId,
-            otherUserIds = otherUserIds,
-            messageContent = body.messageContent
+            targetUserId = UserId(body.targetUserId),
+            message = body.message
+        ).asDto()
+    }
+
+    @PostMapping("/group")
+    fun createGroupChatRoom(
+        @Valid @RequestBody body: CreateGroupChatRoomRequest,
+    ): ChatRoomDto {
+        return chatRoomService.createGroupChatRoom(
+            creatorId = requesterId,
+            name = body.name,
+            participantIds = body.participantIds.map { UserId(it) }
         ).asDto()
     }
 

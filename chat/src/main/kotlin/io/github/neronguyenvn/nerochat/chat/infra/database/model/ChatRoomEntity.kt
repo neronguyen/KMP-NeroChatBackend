@@ -2,6 +2,7 @@ package io.github.neronguyenvn.nerochat.chat.infra.database.model
 
 import io.github.neronguyenvn.nerochat.chat.domain.model.ChatMessage
 import io.github.neronguyenvn.nerochat.chat.domain.model.ChatRoom
+import io.github.neronguyenvn.nerochat.chat.domain.model.ChatRoomType
 import io.github.neronguyenvn.nerochat.domain.type.ChatRoomId
 import jakarta.persistence.*
 import org.hibernate.annotations.CreationTimestamp
@@ -19,6 +20,13 @@ class ChatRoomEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     var id: UUID? = null,
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    var type: ChatRoomType,
+
+    @Column(nullable = true)
+    var name: String? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creator_id", nullable = false)
@@ -54,11 +62,13 @@ class ChatRoomEntity(
 )
 
 @OptIn(ExperimentalTime::class)
-fun ChatRoomEntity.asExternalModel(lastMessage: ChatMessage) = ChatRoom(
+fun ChatRoomEntity.asExternalModel(lastMessage: ChatMessage?) = ChatRoom(
     id = ChatRoomId(id?.toString() ?: error("ChatRoomId have to be generated")),
+    type = type,
+    name = name,
     creator = creator.asExternalModel(),
     participants = participants.map { it.asExternalModel() }.toSet(),
     lastMessage = lastMessage,
-    lastActivityAt = lastMessage.createdAt,
+    lastActivityAt = lastMessage?.createdAt ?: createdAt.toKotlinInstant(),
     createdAt = createdAt.toKotlinInstant()
 )
