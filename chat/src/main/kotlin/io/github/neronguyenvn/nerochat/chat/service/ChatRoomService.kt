@@ -232,16 +232,15 @@ class ChatRoomService(
             ?: throw ChatParticipantNotFoundException(userId)
 
         val newParticipantsSize = chatRoom.participants.size - 1
-        if (newParticipantsSize == 0) {
+        if (chatRoom.type == ChatRoomType.DIRECT || newParticipantsSize == 0) {
             chatRoomRepository.deleteById(chatRoomId.asUUID())
-            return
+        } else {
+            chatRoomRepository.save(
+                chatRoom.apply {
+                    this.participants = chatRoom.participants - participant
+                }
+            )
         }
-
-        chatRoomRepository.save(
-            chatRoom.apply {
-                this.participants = chatRoom.participants - participant
-            }
-        )
 
         applicationEventPublisher.publishEvent(
             InternalChatEvent.ChatParticipantLeftEvent(

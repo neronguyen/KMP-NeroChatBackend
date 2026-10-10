@@ -1,6 +1,8 @@
 package io.github.neronguyenvn.nerochat.chat.service
 
+import io.github.neronguyenvn.nerochat.chat.domain.event.InternalChatEvent
 import io.github.neronguyenvn.nerochat.chat.domain.exception.ChatParticipantNotFoundException
+import io.github.neronguyenvn.nerochat.chat.domain.exception.ChatRoomNotFoundException
 import io.github.neronguyenvn.nerochat.chat.domain.exception.InvalidChatRoomSizeException
 import io.github.neronguyenvn.nerochat.chat.domain.model.ChatRoomType
 import io.github.neronguyenvn.nerochat.chat.infra.database.model.ChatMessageEntity
@@ -9,16 +11,24 @@ import io.github.neronguyenvn.nerochat.chat.infra.database.model.ChatRoomEntity
 import io.github.neronguyenvn.nerochat.chat.infra.database.repository.ChatMessageRepository
 import io.github.neronguyenvn.nerochat.chat.infra.database.repository.ChatParticipantRepository
 import io.github.neronguyenvn.nerochat.chat.infra.database.repository.ChatRoomRepository
+import io.github.neronguyenvn.nerochat.domain.type.ChatRoomId
 import io.github.neronguyenvn.nerochat.domain.type.UserId
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.*
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.never
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import org.springframework.context.ApplicationEventPublisher
 import java.time.Instant
-import java.util.*
+import java.util.Optional
+import java.util.UUID
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
@@ -293,6 +303,121 @@ class ChatRoomServiceTest {
                 creatorId = creatorId,
                 name = "Group",
                 participantIds = listOf(targetUserId, user3Id)
+            )
+        }
+    }
+
+    @Test
+    fun `removeParticipantFromChatRoom deletes direct chat room and publishes ChatParticipantLeftEvent`() {
+        val roomId = ChatRoomId(UUID.randomUUID())
+        val roomEntity = ChatRoomEntity(
+            id = roomId.asUUID(),
+            type = ChatRoomType.DIRECT,
+            creator = creatorEntity,
+            participants = setOf(creatorEntity, targetEntity),
+            createdAt = Instant.now()
+        )
+        `when`(chatRoomRepository.findById(roomId.asUUID())).thenReturn(Optional.of(roomEntity))
+
+        chatRoomService.removeParticipantFromChatRoom(
+            chatRoomId = roomId,
+            userId = creatorId
+        )
+
+        verify(chatRoomRepository).deleteById(roomId.asUUID())
+        verify(chatRoomRepository, never()).save(any())
+
+        val captor = ArgumentCaptor.forClass(InternalChatEvent.ChatParticipantLeftEvent::class.java)
+        verify(applicationEventPublisher).publishEvent(captor.capture())
+        assertEquals(roomId, captor.value.chatRoomId)
+        assertEquals(creatorId.value, captor.value.leftUser.userId.value)
+    }
+
+    @Test
+    fun `removeParticipantFromChatRoom deletes group chat room when last participant leaves and publishes ChatParticipantLeftEvent`() {
+        val roomId = ChatRoomId(UUID.randomUUID())
+        val roomEntity = ChatRoomEntity(
+            id = roomId.asUUID(),
+            type = ChatRoomType.GROUP,
+            name = "Group Chat",
+            creator = creatorEntity,
+            participants = setOf(creatorEntity),
+            createdAt = Instant.now()
+        )
+        `when`(chatRoomRepository.findById(roomId.asUUID())).thenReturn(Optional.of(roomEntity))
+
+        chatRoomService.removeParticipantFromChatRoom(
+            chatRoomId = roomId,
+            userId = creatorId
+        )
+
+        verify(chatRoomRepository).deleteById(roomId.asUUID())
+        verify(chatRoomRepository, never()).save(any())
+
+        val captor = ArgumentCaptor.forClass(InternalChatEvent.ChatParticipantLeftEvent::class.java)
+        verify(applicationEventPublisher).publishEvent(captor.capture())
+        assertEquals(roomId, captor.value.chatRoomId)
+        assertEquals(creatorId.value, captor.value.leftUser.userId.value)
+    }
+
+    @Test
+    fun `removeParticipantFromChatRoom removes participant from group chat room and publishes ChatParticipantLeftEvent`() {
+        val roomId = ChatRoomId(UUID.randomUUID())
+        val roomEntity = ChatRoomEntity(
+            id = roomId.asUUID(),
+            type = ChatRoomType.GROUP,
+            name = "Group Chat",
+            creator = creatorEntity,
+            participants = setOf(creatorEntity, targetEntity, user3Entity),
+            createdAt = Instant.now()
+        )
+        `when`(chatRoomRepository.findById(roomId.asUUID())).thenReturn(Optional.of(roomEntity))
+        `when`(chatRoomRepository.save(any(ChatRoomEntity::class.java))).thenReturn(roomEntity)
+
+        chatRoomService.removeParticipantFromChatRoom(
+            chatRoomId = roomId,
+            userId = targetUserId
+        )
+
+        verify(chatRoomRepository, never()).deleteById(any())
+        verify(chatRoomRepository).save(roomEntity)
+
+        val captor = ArgumentCaptor.forClass(InternalChatEvent.ChatParticipantLeftEvent::class.java)
+        verify(applicationEventPublisher).publishEvent(captor.capture())
+        assertEquals(roomId, captor.value.chatRoomId)
+        assertEquals(targetUserId.value, captor.value.leftUser.userId.value)
+    }
+
+    @Test
+    fun `removeParticipantFromChatRoom throws ChatRoomNotFoundException when chat room not found`() {
+        val roomId = ChatRoomId(UUID.randomUUID())
+        `when`(chatRoomRepository.findById(roomId.asUUID())).thenReturn(Optional.empty())
+
+        assertThrows<ChatRoomNotFoundException> {
+            chatRoomService.removeParticipantFromChatRoom(
+                chatRoomId = roomId,
+                userId = creatorId
+            )
+        }
+    }
+
+    @Test
+    fun `removeParticipantFromChatRoom throws ChatParticipantNotFoundException when participant not in chat room`() {
+        val roomId = ChatRoomId(UUID.randomUUID())
+        val roomEntity = ChatRoomEntity(
+            id = roomId.asUUID(),
+            type = ChatRoomType.GROUP,
+            name = "Group Chat",
+            creator = creatorEntity,
+            participants = setOf(creatorEntity),
+            createdAt = Instant.now()
+        )
+        `when`(chatRoomRepository.findById(roomId.asUUID())).thenReturn(Optional.of(roomEntity))
+
+        assertThrows<ChatParticipantNotFoundException> {
+            chatRoomService.removeParticipantFromChatRoom(
+                chatRoomId = roomId,
+                userId = targetUserId
             )
         }
     }
