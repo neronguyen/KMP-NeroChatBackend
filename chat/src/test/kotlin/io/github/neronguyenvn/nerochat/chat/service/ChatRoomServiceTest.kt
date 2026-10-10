@@ -203,7 +203,7 @@ class ChatRoomServiceTest {
             .thenReturn(null)
             .thenReturn(existingRoomEntity)
 
-        `when`(chatRoomRepository.saveAndFlush(any(ChatRoomEntity::class.java)))
+        `when`(chatRoomRepository.save(any(ChatRoomEntity::class.java)))
             .thenThrow(DataIntegrityViolationException("Duplicate entry"))
 
         val existingMessageEntity = ChatMessageEntity(
@@ -227,7 +227,7 @@ class ChatRoomServiceTest {
         assertEquals(existingRoomId.toString(), result.id.value)
         assertEquals(ChatRoomType.DIRECT, result.type)
 
-        verify(chatRoomRepository).saveAndFlush(any(ChatRoomEntity::class.java))
+        verify(chatRoomRepository).save(any(ChatRoomEntity::class.java))
         verify(chatRoomRepository, times(2)).findDirectChatRoomBetween(directPairKey)
     }
 
