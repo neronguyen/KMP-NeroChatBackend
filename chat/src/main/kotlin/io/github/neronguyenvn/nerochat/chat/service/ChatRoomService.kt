@@ -22,7 +22,6 @@ import io.github.neronguyenvn.nerochat.domain.type.UserId
 import io.github.neronguyenvn.nerochat.infra.caching.CacheNames
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.context.ApplicationEventPublisher
-import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -112,19 +111,18 @@ class ChatRoomService(
             return existingRoom.asExternalModel(lastMessage = lastMessage)
         }
 
-        val newRoom = try {
-            chatRoomRepository.save(
-                ChatRoomEntity(
-                    type = ChatRoomType.DIRECT,
-                    directPairKey = directPairKey,
-                    creator = creator,
-                    participants = setOf(creator, target),
-                )
+        // TODO: Handle race condition when two users create a direct room concurrently.
+        // Catching DataIntegrityViolationException here marks the current @Transactional session as rollback-only
+        // and corrupts the PersistenceContext, causing UnexpectedRollbackException on commit.
+        // Fix by isolating insert into a separate transaction (REQUIRES_NEW) or handling via DB-level upsert/lock.
+        val newRoom = chatRoomRepository.save(
+            ChatRoomEntity(
+                type = ChatRoomType.DIRECT,
+                directPairKey = directPairKey,
+                creator = creator,
+                participants = setOf(creator, target),
             )
-        } catch (e: DataIntegrityViolationException) {
-            chatRoomRepository.findDirectChatRoomBetween(directPairKey)
-                ?: throw e
-        }
+        )
 
         val initialMessage = chatMessageRepository.save(
             ChatMessageEntity(
