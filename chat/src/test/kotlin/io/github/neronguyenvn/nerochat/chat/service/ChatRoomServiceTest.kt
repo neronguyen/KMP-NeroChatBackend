@@ -8,6 +8,7 @@ import io.github.neronguyenvn.nerochat.chat.domain.model.ChatRoomType
 import io.github.neronguyenvn.nerochat.chat.infra.database.model.ChatMessageEntity
 import io.github.neronguyenvn.nerochat.chat.infra.database.model.ChatParticipantEntity
 import io.github.neronguyenvn.nerochat.chat.infra.database.model.ChatRoomEntity
+import io.github.neronguyenvn.nerochat.chat.infra.database.model.DirectPairKey
 import io.github.neronguyenvn.nerochat.chat.infra.database.repository.ChatMessageRepository
 import io.github.neronguyenvn.nerochat.chat.infra.database.repository.ChatParticipantRepository
 import io.github.neronguyenvn.nerochat.chat.infra.database.repository.ChatRoomRepository
@@ -86,8 +87,7 @@ class ChatRoomServiceTest {
     fun `creates direct chat room when not existing`() {
         `when`(chatParticipantRepository.findById(creatorId.asUUID())).thenReturn(Optional.of(creatorEntity))
         `when`(chatParticipantRepository.findById(targetUserId.asUUID())).thenReturn(Optional.of(targetEntity))
-        val directPairKey =
-            ChatRoomService.canonicalDirectPairKey(creatorId.asUUID(), targetUserId.asUUID())
+        val directPairKey = DirectPairKey.of(creatorId, targetUserId).value
         `when`(chatRoomRepository.findDirectChatRoomBetween(directPairKey)).thenReturn(null)
 
         val roomId = UUID.randomUUID()
@@ -99,7 +99,7 @@ class ChatRoomServiceTest {
             participants = setOf(creatorEntity, targetEntity),
             createdAt = Instant.now()
         )
-        `when`(chatRoomRepository.saveAndFlush(any(ChatRoomEntity::class.java))).thenReturn(
+        `when`(chatRoomRepository.save(any(ChatRoomEntity::class.java))).thenReturn(
             createdRoomEntity
         )
 
@@ -128,7 +128,7 @@ class ChatRoomServiceTest {
         assertNotNull(result.lastMessage)
         assertEquals("Hello there", result.lastMessage?.content)
 
-        verify(chatRoomRepository).saveAndFlush(any(ChatRoomEntity::class.java))
+        verify(chatRoomRepository).save(any(ChatRoomEntity::class.java))
         verify(chatMessageRepository).save(any(ChatMessageEntity::class.java))
     }
 
@@ -138,8 +138,7 @@ class ChatRoomServiceTest {
         `when`(chatParticipantRepository.findById(targetUserId.asUUID())).thenReturn(Optional.of(targetEntity))
 
         val existingRoomId = UUID.randomUUID()
-        val directPairKey =
-            ChatRoomService.canonicalDirectPairKey(creatorId.asUUID(), targetUserId.asUUID())
+        val directPairKey = DirectPairKey.of(creatorId, targetUserId).value
         val existingRoomEntity = ChatRoomEntity(
             id = existingRoomId,
             type = ChatRoomType.DIRECT,
@@ -172,7 +171,7 @@ class ChatRoomServiceTest {
         assertEquals(ChatRoomType.DIRECT, result.type)
         assertEquals("Previous message", result.lastMessage?.content)
 
-        verify(chatRoomRepository, never()).saveAndFlush(any(ChatRoomEntity::class.java))
+        verify(chatRoomRepository, never()).save(any(ChatRoomEntity::class.java))
         verify(chatMessageRepository, never()).save(any(ChatMessageEntity::class.java))
     }
 
@@ -190,8 +189,7 @@ class ChatRoomServiceTest {
         )
 
         val existingRoomId = UUID.randomUUID()
-        val directPairKey =
-            ChatRoomService.canonicalDirectPairKey(creatorId.asUUID(), targetUserId.asUUID())
+        val directPairKey = DirectPairKey.of(creatorId, targetUserId).value
         val existingRoomEntity = ChatRoomEntity(
             id = existingRoomId,
             type = ChatRoomType.DIRECT,
