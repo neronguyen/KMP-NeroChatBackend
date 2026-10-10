@@ -184,6 +184,10 @@ class ChatRoomService(
         val chatRoom = chatRoomRepository.findByIdOrNull(chatRoomId.asUUID())
             ?: throw ChatRoomNotFoundException()
 
+        if (chatRoom.type == ChatRoomType.DIRECT) {
+            throw ForbiddenException()
+        }
+
         val isRequesterInChatRoom = chatRoom.participants.any {
             it.userId == requesterId.asUUID()
         }

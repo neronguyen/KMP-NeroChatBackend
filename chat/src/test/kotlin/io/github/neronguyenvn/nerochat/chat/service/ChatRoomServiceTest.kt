@@ -11,6 +11,7 @@ import io.github.neronguyenvn.nerochat.chat.infra.database.model.ChatRoomEntity
 import io.github.neronguyenvn.nerochat.chat.infra.database.repository.ChatMessageRepository
 import io.github.neronguyenvn.nerochat.chat.infra.database.repository.ChatParticipantRepository
 import io.github.neronguyenvn.nerochat.chat.infra.database.repository.ChatRoomRepository
+import io.github.neronguyenvn.nerochat.domain.exception.ForbiddenException
 import io.github.neronguyenvn.nerochat.domain.type.ChatRoomId
 import io.github.neronguyenvn.nerochat.domain.type.UserId
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -303,6 +304,87 @@ class ChatRoomServiceTest {
                 creatorId = creatorId,
                 name = "Group",
                 participantIds = listOf(targetUserId, user3Id)
+            )
+        }
+    }
+
+    @Test
+    fun `addParticipantsToChatRoom throws ForbiddenException when chatRoom type is DIRECT`() {
+        val roomId = ChatRoomId(UUID.randomUUID())
+        val roomEntity = ChatRoomEntity(
+            id = roomId.asUUID(),
+            type = ChatRoomType.DIRECT,
+            creator = creatorEntity,
+            participants = setOf(creatorEntity, targetEntity),
+            createdAt = Instant.now()
+        )
+        `when`(chatRoomRepository.findById(roomId.asUUID())).thenReturn(Optional.of(roomEntity))
+
+        assertThrows<ForbiddenException> {
+            chatRoomService.addParticipantsToChatRoom(
+                chatRoomId = roomId,
+                requesterId = creatorId,
+                userIds = setOf(user3Id)
+            )
+        }
+
+        verify(chatRoomRepository, never()).save(any())
+    }
+
+    @Test
+    fun `addParticipantsToChatRoom successfully adds participants to GROUP chat room and publishes ChatParticipantJoinedEvent`() {
+        val roomId = ChatRoomId(UUID.randomUUID())
+        val roomEntity = ChatRoomEntity(
+            id = roomId.asUUID(),
+            type = ChatRoomType.GROUP,
+            name = "Group Chat",
+            creator = creatorEntity,
+            participants = setOf(creatorEntity, targetEntity),
+            createdAt = Instant.now()
+        )
+        `when`(chatRoomRepository.findById(roomId.asUUID())).thenReturn(Optional.of(roomEntity))
+        `when`(chatParticipantRepository.findById(user3Id.asUUID())).thenReturn(
+            Optional.of(
+                user3Entity
+            )
+        )
+        `when`(chatRoomRepository.save(any(ChatRoomEntity::class.java))).thenReturn(roomEntity)
+
+        val result = chatRoomService.addParticipantsToChatRoom(
+            chatRoomId = roomId,
+            requesterId = creatorId,
+            userIds = setOf(user3Id)
+        )
+
+        assertNotNull(result)
+        verify(chatRoomRepository).save(any(ChatRoomEntity::class.java))
+
+        val captor =
+            ArgumentCaptor.forClass(InternalChatEvent.ChatParticipantJoinedEvent::class.java)
+        verify(applicationEventPublisher).publishEvent(captor.capture())
+        assertEquals(roomId, captor.value.chatRoomId)
+        assertEquals(1, captor.value.newUsers.size)
+        assertEquals(user3Id.value, captor.value.newUsers.first().userId.value)
+    }
+
+    @Test
+    fun `addParticipantsToChatRoom throws ForbiddenException when requester is not in chat room`() {
+        val roomId = ChatRoomId(UUID.randomUUID())
+        val roomEntity = ChatRoomEntity(
+            id = roomId.asUUID(),
+            type = ChatRoomType.GROUP,
+            name = "Group Chat",
+            creator = creatorEntity,
+            participants = setOf(creatorEntity, targetEntity),
+            createdAt = Instant.now()
+        )
+        `when`(chatRoomRepository.findById(roomId.asUUID())).thenReturn(Optional.of(roomEntity))
+
+        assertThrows<ForbiddenException> {
+            chatRoomService.addParticipantsToChatRoom(
+                chatRoomId = roomId,
+                requesterId = user3Id,
+                userIds = setOf(user3Id)
             )
         }
     }
