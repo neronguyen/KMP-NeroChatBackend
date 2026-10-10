@@ -4,17 +4,37 @@ import io.github.neronguyenvn.nerochat.chat.domain.model.ChatMessage
 import io.github.neronguyenvn.nerochat.chat.domain.model.ChatRoom
 import io.github.neronguyenvn.nerochat.chat.domain.model.ChatRoomType
 import io.github.neronguyenvn.nerochat.domain.type.ChatRoomId
-import jakarta.persistence.*
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.FetchType
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.Index
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.JoinTable
+import jakarta.persistence.ManyToMany
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.Table
 import org.hibernate.annotations.CreationTimestamp
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 import kotlin.time.ExperimentalTime
 import kotlin.time.toKotlinInstant
 
 @Entity
 @Table(
     name = "chat_rooms",
-    schema = "chat_service"
+    schema = "chat_service",
+    indexes = [
+        Index(
+            name = "idx_chat_room_direct_pair_key",
+            columnList = "direct_pair_key",
+            unique = true
+        )
+    ]
 )
 class ChatRoomEntity(
     @Id
@@ -27,6 +47,9 @@ class ChatRoomEntity(
 
     @Column(nullable = true)
     var name: String? = null,
+
+    @Column(name = "direct_pair_key", unique = true, nullable = true)
+    var directPairKey: String? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creator_id", nullable = false)

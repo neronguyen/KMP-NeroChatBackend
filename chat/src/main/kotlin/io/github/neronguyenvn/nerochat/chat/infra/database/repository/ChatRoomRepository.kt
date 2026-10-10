@@ -1,10 +1,9 @@
 package io.github.neronguyenvn.nerochat.chat.infra.database.repository
 
-import io.github.neronguyenvn.nerochat.chat.domain.model.ChatRoomType
 import io.github.neronguyenvn.nerochat.chat.infra.database.model.ChatRoomEntity
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
-import java.util.*
+import java.util.UUID
 
 interface ChatRoomRepository : JpaRepository<ChatRoomEntity, UUID> {
 
@@ -45,19 +44,10 @@ interface ChatRoomRepository : JpaRepository<ChatRoomEntity, UUID> {
         FROM ChatRoomEntity c
         LEFT JOIN FETCH c.participants
         LEFT JOIN FETCH c.creator
-        WHERE c.type = :type
-        AND SIZE(c.participants) = 2
-        AND EXISTS (
-            SELECT 1 FROM c.participants p1 WHERE p1.userId = :userId1
-        )
-        AND EXISTS (
-            SELECT 1 FROM c.participants p2 WHERE p2.userId = :userId2
-        )
+        WHERE c.directPairKey = :directPairKey
     """
     )
     fun findDirectChatRoomBetween(
-        userId1: UUID,
-        userId2: UUID,
-        type: ChatRoomType = ChatRoomType.DIRECT
+        directPairKey: String
     ): ChatRoomEntity?
 }

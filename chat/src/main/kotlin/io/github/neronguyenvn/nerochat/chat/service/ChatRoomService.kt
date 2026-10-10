@@ -98,10 +98,8 @@ class ChatRoomService(
         val target = chatParticipantRepository.findByIdOrNull(targetUserId.asUUID())
             ?: throw ChatParticipantNotFoundException(targetUserId)
 
-        val existingRoom = chatRoomRepository.findDirectChatRoomBetween(
-            userId1 = creatorId.asUUID(),
-            userId2 = targetUserId.asUUID(),
-        )
+        val directPairKey = canonicalDirectPairKey(creatorId.asUUID(), targetUserId.asUUID())
+        val existingRoom = chatRoomRepository.findDirectChatRoomBetween(directPairKey)
 
         if (existingRoom != null) {
             val lastMessage = chatMessageRepository
@@ -112,9 +110,14 @@ class ChatRoomService(
             return existingRoom.asExternalModel(lastMessage = lastMessage)
         }
 
+        // TODO: Handle race condition when two users create a direct room concurrently.
+        // Catching DataIntegrityViolationException here marks the current @Transactional session as rollback-only
+        // and corrupts the PersistenceContext, causing UnexpectedRollbackException on commit.
+        // Fix by isolating insert into a separate transaction (REQUIRES_NEW) or handling via DB-level upsert/lock.
         val newRoom = chatRoomRepository.save(
             ChatRoomEntity(
                 type = ChatRoomType.DIRECT,
+                directPairKey = directPairKey,
                 creator = creator,
                 participants = setOf(creator, target),
             )
@@ -254,6 +257,12 @@ class ChatRoomService(
             .findLatestMessagesByChatRoomIds(setOf(chatRoomId.asUUID()))
             .firstOrNull()
             ?.asExternalModel()
+    }
+
+    private fun canonicalDirectPairKey(userId1: java.util.UUID, userId2: java.util.UUID): String {
+        val u1 = userId1.toString()
+        val u2 = userId2.toString()
+        return if (u1 < u2) "${u1}_$u2" else "${u2}_$u1"
     }
 
     companion object {

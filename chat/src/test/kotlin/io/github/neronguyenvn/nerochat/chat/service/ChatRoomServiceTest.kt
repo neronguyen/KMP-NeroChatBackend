@@ -24,9 +24,11 @@ import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.springframework.context.ApplicationEventPublisher
+import org.springframework.dao.DataIntegrityViolationException
 import java.time.Instant
 import java.util.Optional
 import java.util.UUID
@@ -84,24 +86,22 @@ class ChatRoomServiceTest {
     fun `creates direct chat room when not existing`() {
         `when`(chatParticipantRepository.findById(creatorId.asUUID())).thenReturn(Optional.of(creatorEntity))
         `when`(chatParticipantRepository.findById(targetUserId.asUUID())).thenReturn(Optional.of(targetEntity))
-        `when`(
-            chatRoomRepository.findDirectChatRoomBetween(
-                creatorId.asUUID(),
-                targetUserId.asUUID(),
-                ChatRoomType.DIRECT
-            )
-        )
-            .thenReturn(null)
+        val directPairKey =
+            ChatRoomService.canonicalDirectPairKey(creatorId.asUUID(), targetUserId.asUUID())
+        `when`(chatRoomRepository.findDirectChatRoomBetween(directPairKey)).thenReturn(null)
 
         val roomId = UUID.randomUUID()
         val createdRoomEntity = ChatRoomEntity(
             id = roomId,
             type = ChatRoomType.DIRECT,
+            directPairKey = directPairKey,
             creator = creatorEntity,
             participants = setOf(creatorEntity, targetEntity),
             createdAt = Instant.now()
         )
-        `when`(chatRoomRepository.save(any(ChatRoomEntity::class.java))).thenReturn(createdRoomEntity)
+        `when`(chatRoomRepository.saveAndFlush(any(ChatRoomEntity::class.java))).thenReturn(
+            createdRoomEntity
+        )
 
         val messageId = UUID.randomUUID()
         val createdMessageEntity = ChatMessageEntity(
@@ -128,7 +128,7 @@ class ChatRoomServiceTest {
         assertNotNull(result.lastMessage)
         assertEquals("Hello there", result.lastMessage?.content)
 
-        verify(chatRoomRepository).save(any(ChatRoomEntity::class.java))
+        verify(chatRoomRepository).saveAndFlush(any(ChatRoomEntity::class.java))
         verify(chatMessageRepository).save(any(ChatMessageEntity::class.java))
     }
 
@@ -138,21 +138,19 @@ class ChatRoomServiceTest {
         `when`(chatParticipantRepository.findById(targetUserId.asUUID())).thenReturn(Optional.of(targetEntity))
 
         val existingRoomId = UUID.randomUUID()
+        val directPairKey =
+            ChatRoomService.canonicalDirectPairKey(creatorId.asUUID(), targetUserId.asUUID())
         val existingRoomEntity = ChatRoomEntity(
             id = existingRoomId,
             type = ChatRoomType.DIRECT,
+            directPairKey = directPairKey,
             creator = creatorEntity,
             participants = setOf(creatorEntity, targetEntity),
             createdAt = Instant.now()
         )
-        `when`(
-            chatRoomRepository.findDirectChatRoomBetween(
-                creatorId.asUUID(),
-                targetUserId.asUUID(),
-                ChatRoomType.DIRECT
-            )
+        `when`(chatRoomRepository.findDirectChatRoomBetween(directPairKey)).thenReturn(
+            existingRoomEntity
         )
-            .thenReturn(existingRoomEntity)
 
         val existingMessageEntity = ChatMessageEntity(
             id = UUID.randomUUID(),
@@ -174,8 +172,65 @@ class ChatRoomServiceTest {
         assertEquals(ChatRoomType.DIRECT, result.type)
         assertEquals("Previous message", result.lastMessage?.content)
 
-        verify(chatRoomRepository, never()).save(any(ChatRoomEntity::class.java))
+        verify(chatRoomRepository, never()).saveAndFlush(any(ChatRoomEntity::class.java))
         verify(chatMessageRepository, never()).save(any(ChatMessageEntity::class.java))
+    }
+
+    @Test
+    fun `handles concurrent creation by catching DataIntegrityViolationException and re-reading existing room`() {
+        `when`(chatParticipantRepository.findById(creatorId.asUUID())).thenReturn(
+            Optional.of(
+                creatorEntity
+            )
+        )
+        `when`(chatParticipantRepository.findById(targetUserId.asUUID())).thenReturn(
+            Optional.of(
+                targetEntity
+            )
+        )
+
+        val existingRoomId = UUID.randomUUID()
+        val directPairKey =
+            ChatRoomService.canonicalDirectPairKey(creatorId.asUUID(), targetUserId.asUUID())
+        val existingRoomEntity = ChatRoomEntity(
+            id = existingRoomId,
+            type = ChatRoomType.DIRECT,
+            directPairKey = directPairKey,
+            creator = creatorEntity,
+            participants = setOf(creatorEntity, targetEntity),
+            createdAt = Instant.now()
+        )
+
+        `when`(chatRoomRepository.findDirectChatRoomBetween(directPairKey))
+            .thenReturn(null)
+            .thenReturn(existingRoomEntity)
+
+        `when`(chatRoomRepository.saveAndFlush(any(ChatRoomEntity::class.java)))
+            .thenThrow(DataIntegrityViolationException("Duplicate entry"))
+
+        val existingMessageEntity = ChatMessageEntity(
+            id = UUID.randomUUID(),
+            chatRoomId = existingRoomId,
+            sender = creatorEntity,
+            content = "Concurrent message",
+            createdAt = Instant.now()
+        )
+        `when`(chatMessageRepository.findLatestMessagesByChatRoomIds(setOf(existingRoomId)))
+            .thenReturn(listOf(existingMessageEntity))
+        `when`(chatMessageRepository.save(any(ChatMessageEntity::class.java)))
+            .thenReturn(existingMessageEntity)
+
+        val result = chatRoomService.createDirectChatRoom(
+            creatorId = creatorId,
+            targetUserId = targetUserId,
+            message = "Some message"
+        )
+
+        assertEquals(existingRoomId.toString(), result.id.value)
+        assertEquals(ChatRoomType.DIRECT, result.type)
+
+        verify(chatRoomRepository).saveAndFlush(any(ChatRoomEntity::class.java))
+        verify(chatRoomRepository, times(2)).findDirectChatRoomBetween(directPairKey)
     }
 
     @Test
