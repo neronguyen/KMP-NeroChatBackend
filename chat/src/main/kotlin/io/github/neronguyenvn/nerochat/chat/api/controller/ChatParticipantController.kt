@@ -3,13 +3,12 @@ package io.github.neronguyenvn.nerochat.chat.api.controller
 import io.github.neronguyenvn.nerochat.api.util.requesterId
 import io.github.neronguyenvn.nerochat.chat.api.model.ChatParticipantDto
 import io.github.neronguyenvn.nerochat.chat.api.model.asDto
+import io.github.neronguyenvn.nerochat.chat.domain.exception.ChatParticipantNotFoundException
 import io.github.neronguyenvn.nerochat.chat.service.ChatParticipantService
-import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.server.ResponseStatusException
 
 @RestController
 @RequestMapping("/api/chat/participants")
@@ -21,10 +20,12 @@ class ChatParticipantController(private val chatParticipantService: ChatParticip
     ): ChatParticipantDto {
         val participant = if (email.isNullOrBlank()) {
             chatParticipantService.findChatParticipantById(userId = requesterId)
+                ?: throw ChatParticipantNotFoundException(requesterId)
         } else {
             chatParticipantService.findChatParticipantByEmail(email = email)
+                ?: throw ChatParticipantNotFoundException.byEmail(email)
         }
 
-        return participant?.asDto() ?: throw ResponseStatusException(HttpStatus.NOT_FOUND)
+        return participant.asDto()
     }
 }

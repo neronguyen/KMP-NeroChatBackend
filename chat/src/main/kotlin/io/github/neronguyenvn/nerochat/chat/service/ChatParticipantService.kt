@@ -8,7 +8,7 @@ import io.github.neronguyenvn.nerochat.domain.type.UserId
 import io.github.neronguyenvn.nerochat.domain.util.normalizeEmail
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import java.util.*
+import java.util.UUID
 
 @Service
 class ChatParticipantService(private val chatParticipantRepository: ChatParticipantRepository) {
@@ -17,8 +17,9 @@ class ChatParticipantService(private val chatParticipantRepository: ChatParticip
         chatParticipantRepository.save(
             ChatParticipantEntity(
                 userId = UUID.fromString(chatParticipant.userId.value),
-                email = chatParticipant.email,
-                displayName = chatParticipant.displayName
+                email = normalizeEmail(chatParticipant.email),
+                displayName = chatParticipant.displayName,
+                profilePictureUrl = chatParticipant.profilePictureUrl
             )
         )
     }
